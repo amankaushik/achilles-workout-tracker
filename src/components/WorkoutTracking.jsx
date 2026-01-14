@@ -1,0 +1,135 @@
+import { useState, useEffect } from 'react';
+import { WORKOUT_DATA } from '../data/workoutData';
+import { toRoman } from '../utils/helpers';
+
+export default function WorkoutTracking({
+  phase,
+  week,
+  workoutNum,
+  existingData,
+  onSave,
+  onBack
+}) {
+  const workout = WORKOUT_DATA[phase].workouts[workoutNum];
+
+  const [exerciseData, setExerciseData] = useState(() => {
+    return workout.exercises.map((exercise, idx) => {
+      const existing = existingData?.exercises?.[idx];
+      return {
+        sets: Array.from({ length: exercise.sets }, (_, setIdx) => ({
+          weight: existing?.sets?.[setIdx]?.weight || '',
+          reps: existing?.sets?.[setIdx]?.reps || ''
+        })),
+        notes: existing?.notes || ''
+      };
+    });
+  });
+
+  const handleSetChange = (exerciseIdx, setIdx, field, value) => {
+    setExerciseData(prev => {
+      const newData = [...prev];
+      newData[exerciseIdx] = {
+        ...newData[exerciseIdx],
+        sets: newData[exerciseIdx].sets.map((set, idx) =>
+          idx === setIdx ? { ...set, [field]: value } : set
+        )
+      };
+      return newData;
+    });
+  };
+
+  const handleNotesChange = (exerciseIdx, value) => {
+    setExerciseData(prev => {
+      const newData = [...prev];
+      newData[exerciseIdx] = {
+        ...newData[exerciseIdx],
+        notes: value
+      };
+      return newData;
+    });
+  };
+
+  const handleSave = (markComplete) => {
+    const exercises = workout.exercises.map((exercise, idx) => ({
+      name: exercise.name,
+      targetSets: exercise.sets,
+      targetReps: exercise.reps,
+      sets: exerciseData[idx].sets,
+      notes: exerciseData[idx].notes
+    }));
+
+    onSave(exercises, markComplete);
+  };
+
+  return (
+    <section className="view">
+      <button className="back-btn" onClick={onBack}>
+        ← Back to Workouts
+      </button>
+
+      <div className="workout-header">
+        <h2>{workout.name}: {workout.focus}</h2>
+        <span className="workout-date">Phase {toRoman(phase)} - Week {week}</span>
+      </div>
+
+      <div className="exercise-list">
+        {workout.exercises.map((exercise, exerciseIdx) => (
+          <div key={exerciseIdx} className="exercise-card">
+            <div className="exercise-header">
+              <span className="exercise-name">{exercise.name}</span>
+              <span className="exercise-scheme">{exercise.sets}x{exercise.reps}</span>
+            </div>
+            <div className="exercise-body">
+              <div className="input-labels">
+                <span></span>
+                <span>Weight</span>
+                <span>Reps</span>
+              </div>
+
+              {exerciseData[exerciseIdx].sets.map((set, setIdx) => (
+                <div key={setIdx} className="set-row">
+                  <span className="set-label">Set {setIdx + 1}</span>
+                  <input
+                    type="text"
+                    className="set-input"
+                    placeholder="Weight"
+                    value={set.weight}
+                    onChange={(e) => handleSetChange(exerciseIdx, setIdx, 'weight', e.target.value)}
+                    inputMode="decimal"
+                  />
+                  <input
+                    type="text"
+                    className="set-input"
+                    placeholder="Reps"
+                    value={set.reps}
+                    onChange={(e) => handleSetChange(exerciseIdx, setIdx, 'reps', e.target.value)}
+                    inputMode="numeric"
+                  />
+                </div>
+              ))}
+
+              <div className="notes-container">
+                <label className="notes-label">Notes</label>
+                <textarea
+                  className="notes-input"
+                  placeholder="Add notes..."
+                  value={exerciseData[exerciseIdx].notes}
+                  onChange={(e) => handleNotesChange(exerciseIdx, e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="workout-actions">
+        <button className="save-btn secondary" onClick={() => handleSave(false)}>
+          Save Progress
+        </button>
+        <button className="save-btn primary" onClick={() => handleSave(true)}>
+          Mark Complete
+        </button>
+      </div>
+    </section>
+  );
+}
