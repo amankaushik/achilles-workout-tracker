@@ -1,6 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { WORKOUT_DATA } from '../data/workoutData';
 import { toRoman } from '../utils/helpers';
+import { WorkoutLogEntry, ExerciseLog, SetData } from '../types';
+
+interface ExerciseFormData {
+  sets: SetData[];
+  notes: string;
+}
+
+interface WorkoutTrackingProps {
+  phase: number;
+  week: number;
+  workoutNum: number;
+  existingData: WorkoutLogEntry | undefined;
+  onSave: (exercises: ExerciseLog[], markComplete: boolean) => void;
+  onBack: () => void;
+}
 
 export default function WorkoutTracking({
   phase,
@@ -9,10 +24,10 @@ export default function WorkoutTracking({
   existingData,
   onSave,
   onBack
-}) {
+}: WorkoutTrackingProps) {
   const workout = WORKOUT_DATA[phase].workouts[workoutNum];
 
-  const [exerciseData, setExerciseData] = useState(() => {
+  const [exerciseData, setExerciseData] = useState<ExerciseFormData[]>(() => {
     return workout.exercises.map((exercise, idx) => {
       const existing = existingData?.exercises?.[idx];
       return {
@@ -25,7 +40,7 @@ export default function WorkoutTracking({
     });
   });
 
-  const handleSetChange = (exerciseIdx, setIdx, field, value) => {
+  const handleSetChange = (exerciseIdx: number, setIdx: number, field: keyof SetData, value: string) => {
     setExerciseData(prev => {
       const newData = [...prev];
       newData[exerciseIdx] = {
@@ -38,7 +53,7 @@ export default function WorkoutTracking({
     });
   };
 
-  const handleNotesChange = (exerciseIdx, value) => {
+  const handleNotesChange = (exerciseIdx: number, value: string) => {
     setExerciseData(prev => {
       const newData = [...prev];
       newData[exerciseIdx] = {
@@ -49,8 +64,8 @@ export default function WorkoutTracking({
     });
   };
 
-  const handleSave = (markComplete) => {
-    const exercises = workout.exercises.map((exercise, idx) => ({
+  const handleSave = (markComplete: boolean) => {
+    const exercises: ExerciseLog[] = workout.exercises.map((exercise, idx) => ({
       name: exercise.name,
       targetSets: exercise.sets,
       targetReps: exercise.reps,

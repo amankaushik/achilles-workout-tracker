@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useWorkoutStorage } from './hooks/useWorkoutStorage';
 import { WORKOUT_DATA } from './data/workoutData';
+import { ExerciseLog } from './types';
 
 import Header from './components/Header';
 import Toast from './components/Toast';
@@ -18,15 +19,17 @@ const VIEWS = {
   TRACKING: 'tracking',
   HISTORY: 'history',
   HISTORY_DETAIL: 'historyDetail'
-};
+} as const;
+
+type ViewType = typeof VIEWS[keyof typeof VIEWS];
 
 export default function App() {
-  const [view, setView] = useState(VIEWS.PHASE);
-  const [currentPhase, setCurrentPhase] = useState(null);
-  const [currentWeek, setCurrentWeek] = useState(null);
-  const [currentWorkout, setCurrentWorkout] = useState(null);
-  const [selectedHistoryKey, setSelectedHistoryKey] = useState(null);
-  const [toast, setToast] = useState(null);
+  const [view, setView] = useState<ViewType>(VIEWS.PHASE);
+  const [currentPhase, setCurrentPhase] = useState<number | null>(null);
+  const [currentWeek, setCurrentWeek] = useState<number | null>(null);
+  const [currentWorkout, setCurrentWorkout] = useState<number | null>(null);
+  const [selectedHistoryKey, setSelectedHistoryKey] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const {
     workoutLog,
@@ -36,26 +39,28 @@ export default function App() {
     hasWeekData
   } = useWorkoutStorage();
 
-  const showToast = useCallback((message) => {
+  const showToast = useCallback((message: string) => {
     setToast(message);
   }, []);
 
-  const handleSelectPhase = (phase) => {
+  const handleSelectPhase = (phase: number) => {
     setCurrentPhase(phase);
     setView(VIEWS.WEEK);
   };
 
-  const handleSelectWeek = (week) => {
+  const handleSelectWeek = (week: number) => {
     setCurrentWeek(week);
     setView(VIEWS.WORKOUT);
   };
 
-  const handleSelectWorkout = (workout) => {
+  const handleSelectWorkout = (workout: number) => {
     setCurrentWorkout(workout);
     setView(VIEWS.TRACKING);
   };
 
-  const handleSaveWorkout = (exercises, markComplete) => {
+  const handleSaveWorkout = (exercises: ExerciseLog[], markComplete: boolean) => {
+    if (currentPhase === null || currentWeek === null || currentWorkout === null) return;
+
     const key = `${currentPhase}-${currentWeek}-${currentWorkout}`;
     const existingEntry = getWorkout(key);
     const workout = WORKOUT_DATA[currentPhase].workouts[currentWorkout];
@@ -84,20 +89,20 @@ export default function App() {
     setView(VIEWS.HISTORY);
   };
 
-  const handleSelectHistoryEntry = (key) => {
+  const handleSelectHistoryEntry = (key: string) => {
     setSelectedHistoryKey(key);
     setView(VIEWS.HISTORY_DETAIL);
   };
 
   const handleDeleteHistoryEntry = () => {
-    if (window.confirm('Are you sure you want to delete this workout entry?')) {
+    if (selectedHistoryKey && window.confirm('Are you sure you want to delete this workout entry?')) {
       deleteWorkout(selectedHistoryKey);
       showToast('Entry deleted');
       setView(VIEWS.HISTORY);
     }
   };
 
-  const handleBack = (toView) => {
+  const handleBack = (toView: ViewType) => {
     setView(toView);
   };
 
@@ -107,6 +112,7 @@ export default function App() {
         return <PhaseSelection onSelectPhase={handleSelectPhase} />;
 
       case VIEWS.WEEK:
+        if (currentPhase === null) return null;
         return (
           <WeekSelection
             phase={currentPhase}
@@ -117,6 +123,7 @@ export default function App() {
         );
 
       case VIEWS.WORKOUT:
+        if (currentPhase === null || currentWeek === null) return null;
         return (
           <WorkoutSelection
             phase={currentPhase}
@@ -128,6 +135,7 @@ export default function App() {
         );
 
       case VIEWS.TRACKING:
+        if (currentPhase === null || currentWeek === null || currentWorkout === null) return null;
         const key = `${currentPhase}-${currentWeek}-${currentWorkout}`;
         return (
           <WorkoutTracking
@@ -150,6 +158,7 @@ export default function App() {
         );
 
       case VIEWS.HISTORY_DETAIL:
+        if (!selectedHistoryKey || !workoutLog[selectedHistoryKey]) return null;
         return (
           <HistoryDetail
             data={workoutLog[selectedHistoryKey]}
