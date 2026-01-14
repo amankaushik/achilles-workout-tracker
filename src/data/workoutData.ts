@@ -1,4 +1,6 @@
-export const WORKOUT_DATA = {
+import { WorkoutDataType } from '../types';
+
+export const WORKOUT_DATA: WorkoutDataType = {
   1: {
     name: "Phase I - Foundation",
     workouts: {

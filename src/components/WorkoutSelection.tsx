@@ -1,9 +1,18 @@
 import { WORKOUT_DATA } from '../data/workoutData';
+import { WorkoutLog } from '../types';
 
-export default function WorkoutSelection({ phase, week, workoutLog, onSelectWorkout, onBack }) {
+interface WorkoutSelectionProps {
+  phase: number;
+  week: number;
+  workoutLog: WorkoutLog;
+  onSelectWorkout: (workoutNum: number) => void;
+  onBack: () => void;
+}
+
+export default function WorkoutSelection({ phase, week, workoutLog, onSelectWorkout, onBack }: WorkoutSelectionProps) {
   const phaseData = WORKOUT_DATA[phase];
 
-  const getWorkoutStatus = (workoutNum) => {
+  const getWorkoutStatus = (workoutNum: number) => {
     const key = `${phase}-${week}-${workoutNum}`;
     const logEntry = workoutLog[key];
 

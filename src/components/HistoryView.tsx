@@ -1,8 +1,15 @@
 import { toRoman, formatDate } from '../utils/helpers';
+import { WorkoutLog, WorkoutLogEntry } from '../types';
 
-export default function HistoryView({ workoutLog, onSelectEntry, onBack }) {
+interface HistoryViewProps {
+  workoutLog: WorkoutLog;
+  onSelectEntry: (key: string) => void;
+  onBack: () => void;
+}
+
+export default function HistoryView({ workoutLog, onSelectEntry, onBack }: HistoryViewProps) {
   const entries = Object.entries(workoutLog)
-    .sort((a, b) => new Date(b[1].savedAt) - new Date(a[1].savedAt));
+    .sort((a, b) => new Date(b[1].savedAt).getTime() - new Date(a[1].savedAt).getTime()) as [string, WorkoutLogEntry][];
 
   return (
     <section className="view">

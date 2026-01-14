@@ -1,6 +1,13 @@
 import { toRoman } from '../utils/helpers';
 
-export default function WeekSelection({ phase, hasWeekData, onSelectWeek, onBack }) {
+interface WeekSelectionProps {
+  phase: number;
+  hasWeekData: (phase: number, week: number) => boolean;
+  onSelectWeek: (week: number) => void;
+  onBack: () => void;
+}
+
+export default function WeekSelection({ phase, hasWeekData, onSelectWeek, onBack }: WeekSelectionProps) {
   return (
     <section className="view">
       <button className="back-btn" onClick={onBack}>
