@@ -21,7 +21,6 @@ export default function WeekSelection({ phase, hasWeekData, onSelectWeek, onBack
             className={`week-card ${hasWeekData(phase, week) ? 'has-data' : ''}`}
             onClick={() => onSelectWeek(week)}
           >
-            <span className="week-num">{week}</span>
             <span className="week-label">Week {week}</span>
           </button>
         ))}

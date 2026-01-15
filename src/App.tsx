@@ -78,11 +78,13 @@ export default function App() {
       completedAt: markComplete ? now : (existingEntry?.completedAt || null)
     });
 
-    showToast(markComplete ? 'Workout completed!' : 'Progress saved!');
-
-    setTimeout(() => {
-      setView(VIEWS.WORKOUT);
-    }, 500);
+    // Only show toast and redirect when marking complete
+    if (markComplete) {
+      showToast('Workout completed!');
+      setTimeout(() => {
+        setView(VIEWS.WORKOUT);
+      }, 500);
+    }
   };
 
   const handleHistoryClick = () => {
