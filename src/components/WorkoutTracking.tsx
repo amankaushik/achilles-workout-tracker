@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { WORKOUT_DATA } from '../data/workoutData';
 import { toRoman } from '../utils/helpers';
 import { WorkoutLogEntry, ExerciseLog, SetData } from '../types';
@@ -26,6 +26,7 @@ export default function WorkoutTracking({
   onBack
 }: WorkoutTrackingProps) {
   const workout = WORKOUT_DATA[phase].workouts[workoutNum];
+  const isInitialMount = useRef(true);
 
   const [exerciseData, setExerciseData] = useState<ExerciseFormData[]>(() => {
     return workout.exercises.map((exercise, idx) => {
@@ -39,6 +40,28 @@ export default function WorkoutTracking({
       };
     });
   });
+
+  // Auto-save when exerciseData changes (debounced)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      const exercises: ExerciseLog[] = workout.exercises.map((exercise, idx) => ({
+        name: exercise.name,
+        targetSets: exercise.sets,
+        targetReps: exercise.reps,
+        sets: exerciseData[idx].sets,
+        notes: exerciseData[idx].notes
+      }));
+
+      onSave(exercises, false);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [exerciseData, workout.exercises, onSave]);
 
   const handleSetChange = (exerciseIdx: number, setIdx: number, field: keyof SetData, value: string) => {
     setExerciseData(prev => {
@@ -64,7 +87,7 @@ export default function WorkoutTracking({
     });
   };
 
-  const handleSave = (markComplete: boolean) => {
+  const handleMarkComplete = () => {
     const exercises: ExerciseLog[] = workout.exercises.map((exercise, idx) => ({
       name: exercise.name,
       targetSets: exercise.sets,
@@ -73,7 +96,7 @@ export default function WorkoutTracking({
       notes: exerciseData[idx].notes
     }));
 
-    onSave(exercises, markComplete);
+    onSave(exercises, true);
   };
 
   return (
@@ -137,14 +160,9 @@ export default function WorkoutTracking({
         ))}
       </div>
 
-      <div className="workout-actions">
-        <button className="save-btn secondary" onClick={() => handleSave(false)}>
-          Save Progress
-        </button>
-        <button className="save-btn primary" onClick={() => handleSave(true)}>
-          Mark Complete
-        </button>
-      </div>
+      <button className="save-btn primary full-width" onClick={handleMarkComplete}>
+        Mark Complete
+      </button>
     </section>
   );
 }

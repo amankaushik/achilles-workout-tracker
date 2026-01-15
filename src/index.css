@@ -395,6 +395,10 @@ body {
     cursor: not-allowed;
 }
 
+.save-btn.full-width {
+    width: 100%;
+}
+
 /* Workout Header */
 .workout-header {
     margin-bottom: var(--spacing);
