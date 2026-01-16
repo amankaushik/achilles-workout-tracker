@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { WorkoutLog, WorkoutLogEntry } from '../types';
 import * as api from '../services/api';
 import { CreateWorkoutLogRequest } from '../types/database';
@@ -40,6 +40,8 @@ export function useWorkoutStorage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const pendingSaveRef = useRef<{ key: string; data: WorkoutLogEntry } | null>(null);
 
   // Sync localStorage changes
   useEffect(() => {
@@ -97,19 +99,38 @@ export function useWorkoutStorage() {
     loadFromApi();
   }, []);
 
-  const saveWorkout = (key: string, data: WorkoutLogEntry) => {
+  const saveWorkout = async (key: string, data: WorkoutLogEntry) => {
     // Update localStorage immediately
     setWorkoutLog(prev => ({
       ...prev,
       [key]: data
     }));
 
-    // Save to API in background
-    const apiData = toApiFormat(data);
-    api.saveWorkoutLog(apiData).catch(error => {
+    // If already saving, queue this save
+    if (isSaving) {
+      pendingSaveRef.current = { key, data };
+      return;
+    }
+
+    // Save to API
+    setIsSaving(true);
+    try {
+      const apiData = toApiFormat(data);
+      await api.saveWorkoutLog(apiData);
+      setSyncError(null);
+    } catch (error) {
       console.error('Error saving to API:', error);
       setSyncError('Failed to sync with server');
-    });
+    } finally {
+      setIsSaving(false);
+
+      // Process pending save if any
+      if (pendingSaveRef.current) {
+        const pending = pendingSaveRef.current;
+        pendingSaveRef.current = null;
+        saveWorkout(pending.key, pending.data);
+      }
+    }
   };
 
   const deleteWorkout = (key: string) => {
