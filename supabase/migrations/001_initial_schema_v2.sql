@@ -59,7 +59,10 @@ CREATE TABLE IF NOT EXISTS exercise_logs (
 
   -- Timestamps
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  -- Unique constraint: one exercise per workout
+  UNIQUE(workout_log_id, exercise_id)
 );
 
 -- Create indexes for exercise_logs
@@ -70,6 +73,7 @@ CREATE INDEX IF NOT EXISTS idx_exercise_logs_exercise ON exercise_logs(exercise_
 CREATE TABLE IF NOT EXISTS set_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   exercise_log_id UUID REFERENCES exercise_logs(id) ON DELETE CASCADE,
+  workout_log_id UUID NOT NULL REFERENCES workout_logs(id) ON DELETE CASCADE,
 
   -- Set details
   set_number INTEGER NOT NULL,
@@ -78,122 +82,18 @@ CREATE TABLE IF NOT EXISTS set_logs (
 
   -- Timestamps
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  -- Unique constraint: one set number per exercise
+  UNIQUE(exercise_log_id, set_number)
 );
 
 -- Create indexes for set_logs
 CREATE INDEX IF NOT EXISTS idx_set_logs_exercise ON set_logs(exercise_log_id);
+CREATE INDEX IF NOT EXISTS idx_set_logs_workout ON set_logs(workout_log_id);
 
 -- Enable Row Level Security (RLS) on all tables
 ALTER TABLE exercises ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workout_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE exercise_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE set_logs ENABLE ROW LEVEL SECURITY;
-
--- RLS Policies for exercises (public read access)
-CREATE POLICY "Exercises are viewable by everyone"
-  ON exercises FOR SELECT
-  USING (true);
-
--- RLS Policies for workout_logs (users can only access their own logs)
-CREATE POLICY "Users can view own workout logs"
-  ON workout_logs FOR SELECT
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own workout logs"
-  ON workout_logs FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own workout logs"
-  ON workout_logs FOR UPDATE
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own workout logs"
-  ON workout_logs FOR DELETE
-  USING (auth.uid() = user_id);
-
--- RLS Policies for exercise_logs (cascade from workout_logs)
-CREATE POLICY "Users can view own exercise logs"
-  ON exercise_logs FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM workout_logs
-      WHERE workout_logs.id = exercise_logs.workout_log_id
-      AND workout_logs.user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users can insert own exercise logs"
-  ON exercise_logs FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM workout_logs
-      WHERE workout_logs.id = exercise_logs.workout_log_id
-      AND workout_logs.user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users can update own exercise logs"
-  ON exercise_logs FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM workout_logs
-      WHERE workout_logs.id = exercise_logs.workout_log_id
-      AND workout_logs.user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users can delete own exercise logs"
-  ON exercise_logs FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM workout_logs
-      WHERE workout_logs.id = exercise_logs.workout_log_id
-      AND workout_logs.user_id = auth.uid()
-    )
-  );
-
--- RLS Policies for set_logs (cascade from exercise_logs)
-CREATE POLICY "Users can view own set logs"
-  ON set_logs FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM exercise_logs
-      JOIN workout_logs ON workout_logs.id = exercise_logs.workout_log_id
-      WHERE exercise_logs.id = set_logs.exercise_log_id
-      AND workout_logs.user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users can insert own set logs"
-  ON set_logs FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM exercise_logs
-      JOIN workout_logs ON workout_logs.id = exercise_logs.workout_log_id
-      WHERE exercise_logs.id = set_logs.exercise_log_id
-      AND workout_logs.user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users can update own set logs"
-  ON set_logs FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM exercise_logs
-      JOIN workout_logs ON workout_logs.id = exercise_logs.workout_log_id
-      WHERE exercise_logs.id = set_logs.exercise_log_id
-      AND workout_logs.user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users can delete own set logs"
-  ON set_logs FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM exercise_logs
-      JOIN workout_logs ON workout_logs.id = exercise_logs.workout_log_id
-      WHERE exercise_logs.id = set_logs.exercise_log_id
-      AND workout_logs.user_id = auth.uid()
-    )
-  );

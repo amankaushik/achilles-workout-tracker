@@ -43,6 +43,7 @@ export interface ExerciseLogDB {
 export interface SetLogDB {
   id: string;
   exerciseLogId: string;
+  workoutLogId: string;
   setNumber: number;
   weight: string | null;
   reps: string | null;

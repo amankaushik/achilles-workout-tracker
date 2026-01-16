@@ -140,6 +140,7 @@ export async function saveWorkoutLog(
       if (exercise.sets && exercise.sets.length > 0) {
         const setLogs = exercise.sets.map((set) => ({
           exercise_log_id: exerciseLog.id,
+          workout_log_id: workoutLogId,
           set_number: set.setNumber,
           weight: set.weight || null,
           reps: set.reps || null,
@@ -288,6 +289,7 @@ export async function getWorkoutLog(
         sets: setLogs.map((set) => ({
           id: set.id,
           exerciseLogId: set.exercise_log_id,
+          workoutLogId: set.workout_log_id,
           setNumber: set.set_number,
           weight: set.weight,
           reps: set.reps,
