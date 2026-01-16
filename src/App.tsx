@@ -30,13 +30,17 @@ export default function App() {
   const [currentWorkout, setCurrentWorkout] = useState<number | null>(null);
   const [selectedHistoryKey, setSelectedHistoryKey] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [isRefreshingHistory, setIsRefreshingHistory] = useState(false);
 
   const {
     workoutLog,
     saveWorkout,
     deleteWorkout,
     getWorkout,
-    hasWeekData
+    hasWeekData,
+    isLoading,
+    syncError,
+    refreshFromApi
   } = useWorkoutStorage();
 
   const showToast = useCallback((message: string) => {
@@ -87,8 +91,11 @@ export default function App() {
     }
   };
 
-  const handleHistoryClick = () => {
+  const handleHistoryClick = async () => {
+    setIsRefreshingHistory(true);
     setView(VIEWS.HISTORY);
+    await refreshFromApi();
+    setIsRefreshingHistory(false);
   };
 
   const handleSelectHistoryEntry = (key: string) => {
@@ -156,6 +163,7 @@ export default function App() {
             workoutLog={workoutLog}
             onSelectEntry={handleSelectHistoryEntry}
             onBack={() => handleBack(VIEWS.PHASE)}
+            isRefreshing={isRefreshingHistory}
           />
         );
 
@@ -174,9 +182,25 @@ export default function App() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <>
+        <Header onHistoryClick={handleHistoryClick} />
+        <div style={{ padding: '2rem', textAlign: 'center' }}>
+          <p>Loading workout data...</p>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Header onHistoryClick={handleHistoryClick} />
+      {syncError && (
+        <div style={{ padding: '0.5rem', backgroundColor: '#ff6b6b', color: 'white', textAlign: 'center' }}>
+          {syncError}
+        </div>
+      )}
       {renderView()}
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </>

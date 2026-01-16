@@ -5,9 +5,10 @@ interface HistoryViewProps {
   workoutLog: WorkoutLog;
   onSelectEntry: (key: string) => void;
   onBack: () => void;
+  isRefreshing?: boolean;
 }
 
-export default function HistoryView({ workoutLog, onSelectEntry, onBack }: HistoryViewProps) {
+export default function HistoryView({ workoutLog, onSelectEntry, onBack, isRefreshing }: HistoryViewProps) {
   const entries = Object.entries(workoutLog)
     .sort((a, b) => new Date(b[1].savedAt).getTime() - new Date(a[1].savedAt).getTime()) as [string, WorkoutLogEntry][];
 
@@ -17,6 +18,12 @@ export default function HistoryView({ workoutLog, onSelectEntry, onBack }: Histo
         ← Back
       </button>
       <h2>Workout History</h2>
+
+      {isRefreshing && (
+        <div style={{ padding: '1rem', textAlign: 'center', color: '#666' }}>
+          Refreshing from database...
+        </div>
+      )}
 
       <div className="history-list">
         {entries.length === 0 ? (
