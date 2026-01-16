@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react';
+import { useAuth } from './contexts/AuthContext';
 import { useWorkoutStorage } from './hooks/useWorkoutStorage';
 import { WORKOUT_DATA } from './data/workoutData';
 import { ExerciseLog } from './types';
 
+import Auth from './components/Auth';
 import Header from './components/Header';
 import Toast from './components/Toast';
 import PhaseSelection from './components/PhaseSelection';
@@ -24,6 +26,7 @@ const VIEWS = {
 type ViewType = typeof VIEWS[keyof typeof VIEWS];
 
 export default function App() {
+  const { user, loading: authLoading } = useAuth();
   const [view, setView] = useState<ViewType>(VIEWS.PHASE);
   const [currentPhase, setCurrentPhase] = useState<number | null>(null);
   const [currentWeek, setCurrentWeek] = useState<number | null>(null);
@@ -42,6 +45,19 @@ export default function App() {
     syncError,
     refreshFromApi
   } = useWorkoutStorage();
+
+  // Show auth screen if not logged in
+  if (authLoading) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Auth />;
+  }
 
   const showToast = useCallback((message: string) => {
     setToast(message);

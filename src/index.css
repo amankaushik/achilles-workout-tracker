@@ -594,3 +594,102 @@ body {
 .delete-btn:hover {
     background: var(--primary);
 }
+
+/* Auth Container */
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing);
+}
+
+.auth-card {
+    background: var(--surface);
+    padding: calc(var(--spacing) * 2);
+    border-radius: var(--border-radius);
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.auth-title {
+    font-size: 1.8rem;
+    text-align: center;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+.auth-subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: calc(var(--spacing) * 2);
+    font-size: 0.95rem;
+}
+
+/* Override Supabase Auth UI styles to match our theme */
+.auth-card .supabase-auth-ui_ui-container {
+    color: var(--text);
+}
+
+.auth-card .supabase-auth-ui_ui-button {
+    background: var(--primary);
+    color: var(--text);
+}
+
+.auth-card .supabase-auth-ui_ui-button:hover {
+    background: var(--primary-dark);
+}
+
+.auth-card .supabase-auth-ui_ui-input {
+    background: var(--background);
+    border-color: var(--surface-light);
+    color: var(--text);
+}
+
+.auth-card .supabase-auth-ui_ui-input:focus {
+    border-color: var(--primary);
+}
+
+.auth-card .supabase-auth-ui_ui-label {
+    color: var(--text-muted);
+}
+
+.auth-card .supabase-auth-ui_ui-anchor {
+    color: var(--secondary);
+}
+
+.auth-card .supabase-auth-ui_ui-anchor:hover {
+    color: var(--text);
+}
+
+/* User Profile Section in Header */
+.user-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-email {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.logout-btn {
+    background: var(--surface-light);
+    color: var(--text);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.logout-btn:hover {
+    background: var(--primary);
+}
