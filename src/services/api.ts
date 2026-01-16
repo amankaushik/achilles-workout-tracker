@@ -7,35 +7,14 @@ import {
 } from '../types/database';
 
 /**
- * Get the current authenticated user ID
+ * Get the current authenticated user ID from Supabase Auth
+ * Uses auth.users table managed by Supabase, no custom users table needed
  */
 async function getCurrentUserId(): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
     throw new Error('No authenticated user');
-  }
-
-  // Ensure user exists in users table
-  const { data: existingUser } = await supabase
-    .from('users')
-    .select('id')
-    .eq('id', user.id)
-    .single();
-
-  if (!existingUser) {
-    // Create user record
-    const { error } = await supabase
-      .from('users')
-      .insert({
-        id: user.id,
-        email: user.email || '',
-        name: user.user_metadata?.name || null,
-      });
-
-    if (error && error.code !== '23505') { // Ignore duplicate key errors
-      console.error('Error creating user record:', error);
-    }
   }
 
   return user.id;

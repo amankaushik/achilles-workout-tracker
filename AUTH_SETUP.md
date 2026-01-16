@@ -25,8 +25,8 @@ This branch adds user authentication using Supabase Auth.
 
 - Each user has their own workout data
 - RLS policies ensure users can only access their own records
-- User ID from Supabase Auth is used as the primary key
-- Automatic user record creation in `users` table on first login
+- User ID from Supabase Auth (`auth.users.id`) is used directly
+- No custom users table needed - Supabase Auth manages user data
 
 ### Components
 
@@ -58,17 +58,26 @@ Added auth-specific styles in `src/index.css`:
 3. Configure email templates (optional)
 4. Set site URL to your deployment URL
 
-### 2. Run Database Migration
+### 2. Run Database Migrations
 
-Run the RLS enablement migration in Supabase SQL Editor:
-
+**If starting fresh**, run the updated schema:
 ```bash
-# File: supabase/migrations/005_enable_rls_for_auth.sql
+# File: supabase/migrations/001_initial_schema_v2.sql
 ```
 
-This migration:
-- Re-enables RLS on all tables
-- Creates policies that check `auth.uid()` for authenticated users
+**If you already ran the old schema**, run these in order:
+```bash
+# 1. Enable RLS for auth
+# File: supabase/migrations/005_enable_rls_for_auth.sql
+
+# 2. Remove custom users table (optional but recommended)
+# File: supabase/migrations/006_remove_custom_users_table.sql
+```
+
+These migrations:
+- Re-enable RLS on all tables
+- Create policies that check `auth.uid()` for authenticated users
+- Remove custom users table (uses auth.users instead)
 - Ensures users can only access their own data
 
 ### 3. Update Environment Variables (If Deploying)
@@ -142,9 +151,10 @@ All tables have RLS policies that:
 
 ### Auth Policies
 
-**Users Table:**
-- Users can view/update/insert only their own record
-- Auto-created on first login if doesn't exist
+**No Custom Users Table:**
+- Supabase Auth manages `auth.users` table automatically
+- Contains: id, email, created_at, updated_at, user_metadata
+- No need to create or manage user records ourselves
 
 **Workout Logs:**
 - Full CRUD only for own workout logs (where `user_id = auth.uid()`)
@@ -165,14 +175,17 @@ async function ensureUser() {
 
 ### After (Authenticated User):
 ```typescript
-async function getCurrentUserId() {
+async function getCurrentUserId(): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('No authenticated user');
-  return user.id;
+  return user.id; // UUID from auth.users table
 }
 ```
 
-All API functions now use `getCurrentUserId()` instead of `ensureUser()`.
+**Key Changes:**
+- All API functions now use `getCurrentUserId()` instead of `ensureUser()`
+- No custom user table management - auth.users is handled by Supabase
+- No user record creation logic needed - auth handles everything
 
 ## Troubleshooting
 

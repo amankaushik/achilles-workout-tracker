@@ -9,13 +9,9 @@ export interface Exercise {
   createdAt: string;
 }
 
-export interface User {
-  id: string;
-  email: string;
-  name: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+// Note: No custom User interface needed!
+// Supabase Auth manages auth.users table with built-in User type
+// Access via: import { User } from '@supabase/supabase-js'
 
 export interface WorkoutLogDB {
   id: string;
