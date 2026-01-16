@@ -84,8 +84,8 @@ CREATE TABLE IF NOT EXISTS set_logs (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-  -- Unique constraint: one set number per exercise
-  UNIQUE(exercise_log_id, set_number)
+  -- Unique constraint: one set number per exercise per workout
+  UNIQUE(workout_log_id, exercise_log_id, set_number)
 );
 
 -- Create indexes for set_logs

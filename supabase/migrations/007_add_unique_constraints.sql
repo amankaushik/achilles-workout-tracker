@@ -1,4 +1,4 @@
--- Add unique constraints and direct workout_log_id reference to set_logs
+ hav-- Add unique constraints and direct workout_log_id reference to set_logs
 -- This prevents duplicate exercises and sets, and simplifies queries
 
 -- Step 1: Add unique constraint to exercise_logs
