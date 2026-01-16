@@ -46,7 +46,11 @@ export default function App() {
     refreshFromApi
   } = useWorkoutStorage();
 
-  // Show auth screen if not logged in
+  const showToast = useCallback((message: string) => {
+    setToast(message);
+  }, []);
+
+  // Show auth screen if not logged in (AFTER all hooks are called)
   if (authLoading) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -58,10 +62,6 @@ export default function App() {
   if (!user) {
     return <Auth />;
   }
-
-  const showToast = useCallback((message: string) => {
-    setToast(message);
-  }, []);
 
   const handleSelectPhase = (phase: number) => {
     setCurrentPhase(phase);
