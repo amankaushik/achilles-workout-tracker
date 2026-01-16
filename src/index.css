@@ -28,9 +28,65 @@ body {
 }
 
 #root {
-    max-width: 600px;
+    max-width: 100%;
     margin: 0 auto;
     padding-bottom: 20px;
+}
+
+/* App Layout */
+.app-layout {
+    display: flex;
+    min-height: calc(100vh - 60px); /* Subtract header height */
+}
+
+.main-content {
+    flex: 1;
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Side Navigation */
+.sidenav {
+    width: 80px;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: var(--spacing) 8px;
+    border-right: 1px solid var(--surface-light);
+    position: sticky;
+    top: 60px; /* Header height */
+    height: calc(100vh - 60px);
+}
+
+.sidenav-btn {
+    background: var(--surface-light);
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 12px 8px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+    color: var(--text);
+}
+
+.sidenav-btn:hover {
+    background: var(--secondary);
+    transform: translateX(4px);
+}
+
+.sidenav-icon {
+    font-size: 1.5rem;
+}
+
+.sidenav-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-align: center;
 }
 
 /* Header */
@@ -692,4 +748,21 @@ body {
 
 .logout-btn:hover {
     background: var(--primary);
+}
+
+/* Stats View */
+.stats-placeholder {
+    text-align: center;
+    padding: calc(var(--spacing) * 4) var(--spacing);
+}
+
+.stats-placeholder h3 {
+    font-size: 1.5rem;
+    color: var(--text);
+    margin-bottom: var(--spacing);
+}
+
+.stats-placeholder p {
+    color: var(--text-muted);
+    font-size: 1rem;
 }

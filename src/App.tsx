@@ -6,6 +6,7 @@ import { ExerciseLog } from './types';
 
 import Auth from './components/Auth';
 import Header from './components/Header';
+import SideNav from './components/SideNav';
 import Toast from './components/Toast';
 import PhaseSelection from './components/PhaseSelection';
 import WeekSelection from './components/WeekSelection';
@@ -13,6 +14,7 @@ import WorkoutSelection from './components/WorkoutSelection';
 import WorkoutTracking from './components/WorkoutTracking';
 import HistoryView from './components/HistoryView';
 import HistoryDetail from './components/HistoryDetail';
+import StatsView from './components/StatsView';
 
 const VIEWS = {
   PHASE: 'phase',
@@ -20,7 +22,8 @@ const VIEWS = {
   WORKOUT: 'workout',
   TRACKING: 'tracking',
   HISTORY: 'history',
-  HISTORY_DETAIL: 'historyDetail'
+  HISTORY_DETAIL: 'historyDetail',
+  STATS: 'stats'
 } as const;
 
 type ViewType = typeof VIEWS[keyof typeof VIEWS];
@@ -114,6 +117,10 @@ export default function App() {
     setIsRefreshingHistory(false);
   };
 
+  const handleStatsClick = () => {
+    setView(VIEWS.STATS);
+  };
+
   const handleSelectHistoryEntry = (key: string) => {
     setSelectedHistoryKey(key);
     setView(VIEWS.HISTORY_DETAIL);
@@ -193,6 +200,9 @@ export default function App() {
           />
         );
 
+      case VIEWS.STATS:
+        return <StatsView onBack={() => handleBack(VIEWS.PHASE)} />;
+
       default:
         return <PhaseSelection onSelectPhase={handleSelectPhase} />;
     }
@@ -201,9 +211,14 @@ export default function App() {
   if (isLoading) {
     return (
       <>
-        <Header onHistoryClick={handleHistoryClick} />
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
-          <p>Loading workout data...</p>
+        <Header />
+        <div className="app-layout">
+          <SideNav onHistoryClick={handleHistoryClick} onStatsClick={handleStatsClick} />
+          <main className="main-content">
+            <div style={{ padding: '2rem', textAlign: 'center' }}>
+              <p>Loading workout data...</p>
+            </div>
+          </main>
         </div>
       </>
     );
@@ -211,13 +226,18 @@ export default function App() {
 
   return (
     <>
-      <Header onHistoryClick={handleHistoryClick} />
-      {syncError && (
-        <div style={{ padding: '0.5rem', backgroundColor: '#ff6b6b', color: 'white', textAlign: 'center' }}>
-          {syncError}
-        </div>
-      )}
-      {renderView()}
+      <Header />
+      <div className="app-layout">
+        <SideNav onHistoryClick={handleHistoryClick} onStatsClick={handleStatsClick} />
+        <main className="main-content">
+          {syncError && (
+            <div style={{ padding: '0.5rem', backgroundColor: '#ff6b6b', color: 'white', textAlign: 'center' }}>
+              {syncError}
+            </div>
+          )}
+          {renderView()}
+        </main>
+      </div>
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </>
   );
