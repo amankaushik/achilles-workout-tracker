@@ -50,23 +50,44 @@ This ensures all routes are served by `index.html`, enabling client-side routing
 
 **Without this setting, only the homepage will work - all other routes will show 404 errors.**
 
-## Step 4: Configure Environment Variables
+## Step 4: Configure Environment Variables (Build-time)
 
-In the Cloudflare Pages project settings, add the following environment variables:
+**IMPORTANT:** For Vite apps, environment variables must be set DURING the initial project setup or in the build settings, NOT in the Settings → Environment variables section (which is for runtime variables).
+
+### Option 1: Set During Initial Setup (Recommended)
+
+When you first create the Cloudflare Pages project:
+
+1. After selecting your repository and setting build command/output directory
+2. **Before clicking "Save and Deploy"**, scroll down to **Environment variables (advanced)**
+3. Click **Add variable** for Production environment
+4. Add both variables:
 
 **Variable Name** | **Value** | **Where to Find**
 ---|---|---
 `VITE_SUPABASE_URL` | `https://your-project.supabase.co` | Supabase Project Settings → API → Project URL
 `VITE_SUPABASE_ANON_KEY` | `your-anon-key` | Supabase Project Settings → API → Project API keys → `anon` `public`
 
-### To add environment variables:
+5. Click **Save and Deploy**
 
-1. In your Cloudflare Pages project, go to **Settings** → **Environment variables**
-2. Click **Add variable**
-3. For **Production** environment, add both variables
-4. Click **Save**
+### Option 2: Add to Existing Project
 
-**Important:** These are the same values from your `.env.local` file.
+If you already created the project:
+
+1. Go to your Cloudflare Pages project
+2. Navigate to **Settings** → **Builds & deployments**
+3. Scroll to **Environment variables**
+4. Under **Production**, click **Add variable**
+5. Add both `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
+6. **Important:** After adding variables, trigger a new deployment:
+   - Go to **Deployments** tab
+   - Click **Create deployment** or push a new commit to trigger rebuild
+
+### Why This Matters
+
+Vite embeds environment variables into your JavaScript during the build process. They need to be available when `npm run build` runs, not at runtime. This is why you set them in the build environment, not as Worker variables.
+
+**Note:** These are the same values from your `.env.local` file.
 
 ## Step 5: Deploy
 
@@ -118,9 +139,18 @@ Cloudflare Pages automatically deploys when you push to the `master` branch:
 **Issue:** App shows "No authenticated user" or Supabase errors
 
 **Solution:**
-1. Check that environment variables are set in Cloudflare Pages settings
+1. Environment variables must be in **Settings → Builds & deployments → Environment variables**, NOT Settings → Environment variables
 2. Make sure variable names start with `VITE_` (required for Vite)
-3. Redeploy after adding/changing environment variables
+3. After adding variables, you MUST trigger a new deployment (they only apply to new builds)
+4. Go to **Deployments** tab and click **Retry deployment** or push a new commit
+
+**Issue:** Error "Variables cannot be added to a Worker that only has static assets"
+
+**Solution:**
+- You're trying to add runtime variables, but Vite needs build-time variables
+- Go to **Settings → Builds & deployments → Environment variables** instead
+- Add the variables there (this is where build environment variables go)
+- The section at Settings → Environment variables is for Workers runtime variables, not for static sites built with Vite
 
 ### Authentication Redirect Issues
 
