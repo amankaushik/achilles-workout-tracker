@@ -11,8 +11,10 @@ This guide walks you through deploying the Achilles Workout Tracker to Cloudflar
 ## Step 1: Prepare Your Repository
 
 The repository is already configured for Cloudflare Pages with:
-- `public/_redirects` - Handles SPA routing (redirects all routes to index.html)
 - `.env.example` - Documents required environment variables
+- Vite build configuration for production deployment
+
+**Note:** SPA routing is configured in the Cloudflare Pages dashboard (see Step 3).
 
 ## Step 2: Create Cloudflare Pages Project
 
@@ -33,6 +35,20 @@ Set the following build configuration:
 
 ### Framework preset
 - Select **None** or **Vite** (Cloudflare should auto-detect Vite)
+
+### IMPORTANT: Enable SPA Mode
+
+After creating the project, you need to enable Single Page Application (SPA) mode:
+
+1. Go to your Cloudflare Pages project
+2. Navigate to **Settings** → **Builds & deployments**
+3. Scroll down to **Build configuration**
+4. Find **Single-page application (SPA)** section
+5. **Enable** the toggle for "Build a single-page application"
+
+This ensures all routes are served by `index.html`, enabling client-side routing to work correctly.
+
+**Without this setting, only the homepage will work - all other routes will show 404 errors.**
 
 ## Step 4: Configure Environment Variables
 
@@ -112,16 +128,18 @@ Cloudflare Pages automatically deploys when you push to the `master` branch:
 
 **Solution:**
 1. Verify Cloudflare Pages URL is added to Supabase redirect URLs
-2. Check that `public/_redirects` file exists and contains `/* /index.html 200`
-3. Ensure SPA routing is working (all routes should load index.html)
+2. Ensure SPA mode is enabled in Cloudflare Pages settings
+3. Check that the redirect URL in Supabase matches your deployed URL exactly
 
 ### Pages Not Loading After Deploy
 
-**Issue:** Routes show 404 errors
+**Issue:** Routes show 404 errors (only homepage works)
 
 **Solution:**
-- The `public/_redirects` file should handle this automatically
-- If issues persist, check Cloudflare Pages **Functions** → **Routes** settings
+1. Verify SPA mode is enabled in Cloudflare Pages settings
+2. Go to **Settings** → **Builds & deployments** → Enable "Build a single-page application"
+3. Redeploy after enabling SPA mode
+4. Clear your browser cache and try again
 
 ## Local Development vs Production
 
