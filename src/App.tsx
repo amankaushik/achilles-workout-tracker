@@ -78,7 +78,7 @@ export default function App() {
     setView(VIEWS.TRACKING);
   };
 
-  const handleSaveWorkout = (exercises: ExerciseLog[], markComplete: boolean) => {
+  const handleSaveWorkout = useCallback((exercises: ExerciseLog[], markComplete: boolean) => {
     if (currentPhase === null || currentWeek === null || currentWorkout === null) return;
 
     const key = `${currentPhase}-${currentWeek}-${currentWorkout}`;
@@ -105,7 +105,7 @@ export default function App() {
         setView(VIEWS.WORKOUT);
       }, 500);
     }
-  };
+  }, [currentPhase, currentWeek, currentWorkout, getWorkout, saveWorkout, showToast, setView]);
 
   const handleHistoryClick = async () => {
     setIsRefreshingHistory(true);
