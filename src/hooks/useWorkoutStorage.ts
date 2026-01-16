@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { WorkoutLog, WorkoutLogEntry } from '../types';
 import * as api from '../services/api';
 import { CreateWorkoutLogRequest } from '../types/database';
+import { useAuth } from '../contexts/AuthContext';
 
 const STORAGE_KEY = 'achilles_workout_log';
 
@@ -33,6 +34,8 @@ function toApiFormat(data: WorkoutLogEntry): CreateWorkoutLogRequest {
 }
 
 export function useWorkoutStorage() {
+  const { user } = useAuth();
+
   const [workoutLog, setWorkoutLog] = useState<WorkoutLog>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     return saved ? JSON.parse(saved) : {};
@@ -48,9 +51,17 @@ export function useWorkoutStorage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(workoutLog));
   }, [workoutLog]);
 
-  // Initial load from API
+  // Initial load from API (only if authenticated)
   useEffect(() => {
     async function loadFromApi() {
+      // Don't attempt to load if user is not authenticated
+      if (!user) {
+        setIsLoading(false);
+        setWorkoutLog({}); // Clear data when logged out
+        setSyncError(null); // Clear any previous errors
+        return;
+      }
+
       try {
         const logs = await api.getWorkoutLogs();
 
@@ -88,16 +99,21 @@ export function useWorkoutStorage() {
         // Replace state with API data only (API is source of truth)
         // This prevents old localStorage data from being re-uploaded
         setWorkoutLog(apiLogs);
+        setSyncError(null); // Clear error on successful load
       } catch (error) {
         console.error('Error loading from API:', error);
-        setSyncError('Failed to sync with server');
+        // Only show error if it's not a "no data" scenario
+        const errorMessage = (error as any)?.message || '';
+        if (!errorMessage.includes('No authenticated user')) {
+          setSyncError('Failed to sync with server');
+        }
       } finally {
         setIsLoading(false);
       }
     }
 
     loadFromApi();
-  }, []);
+  }, [user]); // Re-run when user changes (login/logout)
 
   const saveWorkout = async (key: string, data: WorkoutLogEntry) => {
     // Update localStorage immediately
@@ -105,6 +121,11 @@ export function useWorkoutStorage() {
       ...prev,
       [key]: data
     }));
+
+    // Don't attempt to save to API if user is not authenticated
+    if (!user) {
+      return;
+    }
 
     // If already saving, queue this save
     if (isSaving) {
@@ -143,6 +164,11 @@ export function useWorkoutStorage() {
       delete newLog[key];
       return newLog;
     });
+
+    // Don't attempt to delete from API if user is not authenticated
+    if (!user) {
+      return;
+    }
 
     // Delete from API in background
     api.deleteWorkoutLog(phase, week, workoutNum).catch(error => {
