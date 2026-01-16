@@ -6,41 +6,39 @@ import {
   CreateWorkoutLogRequest,
 } from '../types/database';
 
-// Temporary user ID for development (no auth yet)
-const TEMP_USER_ID = '00000000-0000-0000-0000-000000000000';
-
 /**
- * Get or create a temporary user for development
+ * Get the current authenticated user ID
  */
-async function ensureUser(): Promise<string> {
-  // Check if temp user exists
+async function getCurrentUserId(): Promise<string> {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('No authenticated user');
+  }
+
+  // Ensure user exists in users table
   const { data: existingUser } = await supabase
     .from('users')
     .select('id')
-    .eq('id', TEMP_USER_ID)
+    .eq('id', user.id)
     .single();
 
-  if (existingUser) {
-    return existingUser.id;
+  if (!existingUser) {
+    // Create user record
+    const { error } = await supabase
+      .from('users')
+      .insert({
+        id: user.id,
+        email: user.email || '',
+        name: user.user_metadata?.name || null,
+      });
+
+    if (error && error.code !== '23505') { // Ignore duplicate key errors
+      console.error('Error creating user record:', error);
+    }
   }
 
-  // Create temp user
-  const { data: newUser, error } = await supabase
-    .from('users')
-    .insert({
-      id: TEMP_USER_ID,
-      email: 'temp@achilles.local',
-      name: 'Temporary User',
-    })
-    .select('id')
-    .single();
-
-  if (error) {
-    console.error('Error creating temp user:', error);
-    throw new Error('Failed to create user');
-  }
-
-  return newUser.id;
+  return user.id;
 }
 
 /**
@@ -67,7 +65,7 @@ async function getExerciseId(exerciseName: string): Promise<string | null> {
 export async function saveWorkoutLog(
   request: CreateWorkoutLogRequest
 ): Promise<WorkoutLogDB> {
-  const userId = await ensureUser();
+  const userId = await getCurrentUserId();
 
   // Check if workout log already exists
   const { data: existingLog } = await supabase
@@ -220,7 +218,7 @@ export async function saveWorkoutLog(
  * Get all workout logs for the current user
  */
 export async function getWorkoutLogs(): Promise<WorkoutLogDB[]> {
-  const userId = await ensureUser();
+  const userId = await getCurrentUserId();
 
   const { data, error } = await supabase
     .from('workout_logs')
@@ -256,7 +254,7 @@ export async function getWorkoutLog(
   week: number,
   workoutNum: number
 ): Promise<WorkoutLogFull | null> {
-  const userId = await ensureUser();
+  const userId = await getCurrentUserId();
 
   const { data: workoutLog, error: logError } = await supabase
     .from('workout_logs')
@@ -345,7 +343,7 @@ export async function deleteWorkoutLog(
   week: number,
   workoutNum: number
 ): Promise<void> {
-  const userId = await ensureUser();
+  const userId = await getCurrentUserId();
 
   const { error } = await supabase
     .from('workout_logs')
