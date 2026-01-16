@@ -50,34 +50,6 @@ export default function App() {
     setToast(message);
   }, []);
 
-  // Show auth screen if not logged in (AFTER all hooks are called)
-  if (authLoading) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <p>Loading...</p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Auth />;
-  }
-
-  const handleSelectPhase = (phase: number) => {
-    setCurrentPhase(phase);
-    setView(VIEWS.WEEK);
-  };
-
-  const handleSelectWeek = (week: number) => {
-    setCurrentWeek(week);
-    setView(VIEWS.WORKOUT);
-  };
-
-  const handleSelectWorkout = (workout: number) => {
-    setCurrentWorkout(workout);
-    setView(VIEWS.TRACKING);
-  };
-
   const handleSaveWorkout = useCallback((exercises: ExerciseLog[], markComplete: boolean) => {
     if (currentPhase === null || currentWeek === null || currentWorkout === null) return;
 
@@ -106,6 +78,34 @@ export default function App() {
       }, 500);
     }
   }, [currentPhase, currentWeek, currentWorkout, getWorkout, saveWorkout, showToast, setView]);
+
+  // Show auth screen if not logged in (AFTER all hooks are called)
+  if (authLoading) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Auth />;
+  }
+
+  const handleSelectPhase = (phase: number) => {
+    setCurrentPhase(phase);
+    setView(VIEWS.WEEK);
+  };
+
+  const handleSelectWeek = (week: number) => {
+    setCurrentWeek(week);
+    setView(VIEWS.WORKOUT);
+  };
+
+  const handleSelectWorkout = (workout: number) => {
+    setCurrentWorkout(workout);
+    setView(VIEWS.TRACKING);
+  };
 
   const handleHistoryClick = async () => {
     setIsRefreshingHistory(true);
