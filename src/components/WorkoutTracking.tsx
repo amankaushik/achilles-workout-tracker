@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { WORKOUT_DATA } from '../data/workoutData';
 import { toRoman } from '../utils/helpers';
 import { WorkoutLogEntry, ExerciseLog, SetData } from '../types';
+import Stopwatch from './Stopwatch';
 
 interface ExerciseFormData {
   sets: SetData[];
@@ -109,6 +110,8 @@ export default function WorkoutTracking({
         <h2>{workout.name}: {workout.focus}</h2>
         <span className="workout-date">Phase {toRoman(phase)} - Week {week}</span>
       </div>
+
+      <Stopwatch />
 
       <div className="exercise-list">
         {workout.exercises.map((exercise, exerciseIdx) => (

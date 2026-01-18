@@ -766,3 +766,69 @@ body {
     color: var(--text-muted);
     font-size: 1rem;
 }
+
+/* Stopwatch */
+.stopwatch {
+    background: var(--surface);
+    border: 2px solid var(--surface-light);
+    border-radius: var(--border-radius);
+    padding: calc(var(--spacing) * 1.5);
+    margin-bottom: calc(var(--spacing) * 1.5);
+    text-align: center;
+}
+
+.stopwatch-display {
+    font-size: 2.5rem;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    color: var(--primary);
+    margin-bottom: var(--spacing);
+    letter-spacing: 2px;
+}
+
+.stopwatch-controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.stopwatch-btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 100px;
+}
+
+.stopwatch-btn.start {
+    background: var(--success);
+    color: var(--text);
+}
+
+.stopwatch-btn.start:hover {
+    background: #238276;
+    transform: translateY(-2px);
+}
+
+.stopwatch-btn.pause {
+    background: var(--warning);
+    color: var(--background);
+}
+
+.stopwatch-btn.pause:hover {
+    background: #d4ae5a;
+    transform: translateY(-2px);
+}
+
+.stopwatch-btn.reset {
+    background: var(--surface-light);
+    color: var(--text);
+}
+
+.stopwatch-btn.reset:hover {
+    background: var(--secondary);
+    transform: translateY(-2px);
+}
