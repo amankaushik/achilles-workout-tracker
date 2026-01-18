@@ -604,6 +604,64 @@ body {
     font-style: italic;
 }
 
+/* Abdominal Exercises View */
+.view-container {
+    padding: var(--spacing);
+}
+
+.view-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.view-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.abs-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.abs-section {
+    background: var(--surface);
+    border-radius: var(--border-radius);
+    padding: 20px;
+}
+
+.abs-section-title {
+    color: var(--primary);
+    font-size: 1.2rem;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.abs-exercise-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.abs-exercise-list li {
+    padding: 12px;
+    background: var(--surface-light);
+    border-radius: 8px;
+    color: var(--text);
+    transition: all 0.2s;
+}
+
+.abs-exercise-list li:hover {
+    background: var(--secondary);
+    transform: translateX(4px);
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;

@@ -16,6 +16,7 @@ import WorkoutTracking from './components/WorkoutTracking';
 import HistoryView from './components/HistoryView';
 import HistoryDetail from './components/HistoryDetail';
 import StatsView from './components/StatsView';
+import AbsView from './components/AbsView';
 
 const VIEWS = {
   PHASE: 'phase',
@@ -25,7 +26,8 @@ const VIEWS = {
   TRACKING: 'tracking',
   HISTORY: 'history',
   HISTORY_DETAIL: 'historyDetail',
-  STATS: 'stats'
+  STATS: 'stats',
+  ABS: 'abs'
 } as const;
 
 type ViewType = typeof VIEWS[keyof typeof VIEWS];
@@ -141,6 +143,10 @@ export default function App() {
     setView(VIEWS.STATS);
   };
 
+  const handleAbsClick = () => {
+    setView(VIEWS.ABS);
+  };
+
   const handleSelectHistoryEntry = (key: string) => {
     setSelectedHistoryKey(key);
     setView(VIEWS.HISTORY_DETAIL);
@@ -235,6 +241,9 @@ export default function App() {
       case VIEWS.STATS:
         return <StatsView onBack={() => handleBack(VIEWS.PHASE)} />;
 
+      case VIEWS.ABS:
+        return <AbsView onBack={() => handleBack(VIEWS.PHASE)} />;
+
       default:
         return <PhaseSelection onSelectPhase={handleSelectPhase} />;
     }
@@ -245,7 +254,7 @@ export default function App() {
       <>
         <Header />
         <div className="app-layout">
-          <SideNav onHistoryClick={handleHistoryClick} onStatsClick={handleStatsClick} />
+          <SideNav onHistoryClick={handleHistoryClick} onStatsClick={handleStatsClick} onAbsClick={handleAbsClick} />
           <main className="main-content">
             <div style={{ padding: '2rem', textAlign: 'center' }}>
               <p>Loading workout data...</p>
@@ -260,7 +269,7 @@ export default function App() {
     <>
       <Header />
       <div className="app-layout">
-        <SideNav onHistoryClick={handleHistoryClick} onStatsClick={handleStatsClick} />
+        <SideNav onHistoryClick={handleHistoryClick} onStatsClick={handleStatsClick} onAbsClick={handleAbsClick} />
         <main className="main-content">
           {syncError && (
             <div style={{ padding: '0.5rem', backgroundColor: '#ff6b6b', color: 'white', textAlign: 'center' }}>
