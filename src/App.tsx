@@ -239,7 +239,7 @@ export default function App() {
         );
 
       case VIEWS.STATS:
-        return <StatsView onBack={() => handleBack(VIEWS.PHASE)} />;
+        return <StatsView workoutLog={workoutLog} onBack={() => handleBack(VIEWS.PHASE)} />;
 
       case VIEWS.ABS:
         return <AbsView onBack={() => handleBack(VIEWS.PHASE)} />;

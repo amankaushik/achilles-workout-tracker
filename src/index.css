@@ -851,6 +851,103 @@ body {
     font-size: 1rem;
 }
 
+/* Stats View */
+.stats-section {
+    margin-bottom: 32px;
+    padding: 20px;
+    background: var(--surface);
+    border-radius: var(--border-radius);
+}
+
+.stats-section-title {
+    color: var(--primary);
+    font-size: 1.2rem;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.exercise-chart {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--surface-light);
+    border-radius: 8px;
+}
+
+.exercise-chart-title {
+    font-size: 1rem;
+    margin-bottom: 12px;
+    color: var(--text);
+}
+
+.calendar-container {
+    max-width: 500px;
+}
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.calendar-day-header {
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding: 8px 4px;
+}
+
+.calendar-body {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.calendar-cell {
+    aspect-ratio: 1;
+    background: var(--surface-light);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 8px;
+    transition: all 0.2s;
+    min-height: 50px;
+}
+
+.calendar-cell.empty {
+    background: transparent;
+}
+
+.calendar-cell.has-workout {
+    background: var(--surface-light);
+    border: 2px solid var(--success);
+}
+
+.calendar-date {
+    font-size: 0.9rem;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.workout-indicator {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    color: var(--success);
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.empty-stats {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+
 /* Floating Action Button (FAB) for Stopwatch */
 .fab-stopwatch {
     position: fixed;
