@@ -10,7 +10,14 @@ interface HistoryViewProps {
 
 export default function HistoryView({ workoutLog, onSelectEntry, onBack, isRefreshing }: HistoryViewProps) {
   const entries = Object.entries(workoutLog)
-    .sort((a, b) => new Date(b[1].savedAt).getTime() - new Date(a[1].savedAt).getTime()) as [string, WorkoutLogEntry][];
+    .sort((a, b) => {
+      // Use completedAt if available, otherwise use savedAt
+      const dateA = a[1].completed && a[1].completedAt ? a[1].completedAt : a[1].savedAt;
+      const dateB = b[1].completed && b[1].completedAt ? b[1].completedAt : b[1].savedAt;
+
+      // Sort by most recent first (descending order)
+      return new Date(dateB).getTime() - new Date(dateA).getTime();
+    }) as [string, WorkoutLogEntry][];
 
   return (
     <section className="view">
