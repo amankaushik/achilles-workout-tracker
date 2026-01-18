@@ -11,6 +11,7 @@ import Toast from './components/Toast';
 import PhaseSelection from './components/PhaseSelection';
 import WeekSelection from './components/WeekSelection';
 import WorkoutSelection from './components/WorkoutSelection';
+import WorkoutPreview from './components/WorkoutPreview';
 import WorkoutTracking from './components/WorkoutTracking';
 import HistoryView from './components/HistoryView';
 import HistoryDetail from './components/HistoryDetail';
@@ -20,6 +21,7 @@ const VIEWS = {
   PHASE: 'phase',
   WEEK: 'week',
   WORKOUT: 'workout',
+  WORKOUT_PREVIEW: 'workoutPreview',
   TRACKING: 'tracking',
   HISTORY: 'history',
   HISTORY_DETAIL: 'historyDetail',
@@ -107,6 +109,10 @@ export default function App() {
 
   const handleSelectWorkout = (workout: number) => {
     setCurrentWorkout(workout);
+    setView(VIEWS.WORKOUT_PREVIEW);
+  };
+
+  const handleStartWorkout = () => {
     setView(VIEWS.TRACKING);
   };
 
@@ -166,6 +172,18 @@ export default function App() {
           />
         );
 
+      case VIEWS.WORKOUT_PREVIEW:
+        if (currentPhase === null || currentWeek === null || currentWorkout === null) return null;
+        return (
+          <WorkoutPreview
+            phase={currentPhase}
+            week={currentWeek}
+            workoutNum={currentWorkout}
+            onStartWorkout={handleStartWorkout}
+            onBack={() => handleBack(VIEWS.WORKOUT)}
+          />
+        );
+
       case VIEWS.TRACKING:
         if (currentPhase === null || currentWeek === null || currentWorkout === null) return null;
         const key = `${currentPhase}-${currentWeek}-${currentWorkout}`;
@@ -176,7 +194,7 @@ export default function App() {
             workoutNum={currentWorkout}
             existingData={getWorkout(key)}
             onSave={handleSaveWorkout}
-            onBack={() => handleBack(VIEWS.WORKOUT)}
+            onBack={() => handleBack(VIEWS.WORKOUT_PREVIEW)}
           />
         );
 
