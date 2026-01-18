@@ -177,8 +177,8 @@ export default function WorkoutTracking({
 
       {/* Stopwatch Modal */}
       {isStopwatchOpen && (
-        <div className="stopwatch-modal-overlay" onClick={() => setIsStopwatchOpen(false)}>
-          <div className="stopwatch-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="stopwatch-modal-overlay">
+          <div className="stopwatch-modal">
             <div className="stopwatch-modal-header">
               <h3>Stopwatch</h3>
               <button
