@@ -28,6 +28,7 @@ export default function WorkoutTracking({
 }: WorkoutTrackingProps) {
   const workout = WORKOUT_DATA[phase].workouts[workoutNum];
   const isInitialMount = useRef(true);
+  const [isStopwatchOpen, setIsStopwatchOpen] = useState(false);
 
   const [exerciseData, setExerciseData] = useState<ExerciseFormData[]>(() => {
     return workout.exercises.map((exercise, idx) => {
@@ -111,8 +112,6 @@ export default function WorkoutTracking({
         <span className="workout-date">Phase {toRoman(phase)} - Week {week}</span>
       </div>
 
-      <Stopwatch />
-
       <div className="exercise-list">
         {workout.exercises.map((exercise, exerciseIdx) => (
           <div key={exerciseIdx} className="exercise-card">
@@ -166,6 +165,34 @@ export default function WorkoutTracking({
       <button className="save-btn primary full-width" onClick={handleMarkComplete}>
         Mark Complete
       </button>
+
+      {/* Floating Action Button */}
+      <button
+        className="fab-stopwatch"
+        onClick={() => setIsStopwatchOpen(!isStopwatchOpen)}
+        aria-label="Toggle stopwatch"
+      >
+        ⏱️
+      </button>
+
+      {/* Stopwatch Modal */}
+      {isStopwatchOpen && (
+        <div className="stopwatch-modal-overlay" onClick={() => setIsStopwatchOpen(false)}>
+          <div className="stopwatch-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="stopwatch-modal-header">
+              <h3>Stopwatch</h3>
+              <button
+                className="stopwatch-modal-close"
+                onClick={() => setIsStopwatchOpen(false)}
+                aria-label="Close stopwatch"
+              >
+                ✕
+              </button>
+            </div>
+            <Stopwatch />
+          </div>
+        </div>
+      )}
     </section>
   );
 }
