@@ -109,6 +109,20 @@ export default function App() {
 
   const handleSelectWorkout = (workout: number) => {
     setCurrentWorkout(workout);
+
+    // Check if workout has already been started
+    if (currentPhase !== null && currentWeek !== null) {
+      const key = `${currentPhase}-${currentWeek}-${workout}`;
+      const existingData = getWorkout(key);
+
+      // If workout has data (in progress), skip preview and go straight to tracking
+      if (existingData) {
+        setView(VIEWS.TRACKING);
+        return;
+      }
+    }
+
+    // Otherwise, show preview for new workout
     setView(VIEWS.WORKOUT_PREVIEW);
   };
 
@@ -194,7 +208,7 @@ export default function App() {
             workoutNum={currentWorkout}
             existingData={getWorkout(key)}
             onSave={handleSaveWorkout}
-            onBack={() => handleBack(VIEWS.WORKOUT_PREVIEW)}
+            onBack={() => handleBack(VIEWS.WORKOUT)}
           />
         );
 
