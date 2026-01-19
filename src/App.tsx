@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { useSession } from './contexts/SessionContext';
 import { useWorkoutStorage } from './hooks/useWorkoutStorage';
@@ -17,8 +17,9 @@ import WorkoutPreview from './components/WorkoutPreview';
 import WorkoutTracking from './components/WorkoutTracking';
 import HistoryView from './components/HistoryView';
 import HistoryDetail from './components/HistoryDetail';
-import StatsView from './components/StatsView';
 import AbsView from './components/AbsView';
+
+const StatsView = lazy(() => import('./components/StatsView'));
 
 const VIEWS = {
   PHASE: 'phase',
@@ -293,7 +294,11 @@ export default function App() {
         );
 
       case VIEWS.STATS:
-        return <StatsView workoutLog={workoutLog} onBack={() => handleBack(VIEWS.PHASE)} />;
+        return (
+          <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Loading stats...</div>}>
+            <StatsView workoutLog={workoutLog} onBack={() => handleBack(VIEWS.PHASE)} />
+          </Suspense>
+        );
 
       case VIEWS.ABS:
         return <AbsView onBack={() => handleBack(VIEWS.PHASE)} />;
