@@ -4,8 +4,6 @@ import * as api from '../services/api';
 import { CreateWorkoutLogRequest } from '../types/database';
 import { useAuth } from '../contexts/AuthContext';
 
-const STORAGE_KEY = 'achilles_workout_log';
-
 /**
  * Convert WorkoutLogEntry to CreateWorkoutLogRequest for API
  */
@@ -33,10 +31,12 @@ function toApiFormat(data: WorkoutLogEntry): CreateWorkoutLogRequest {
   };
 }
 
-export function useWorkoutStorage() {
+export function useWorkoutStorage(currentSessionId: string | null) {
   const { user } = useAuth();
+  const STORAGE_KEY = currentSessionId ? `achilles_workout_log_${currentSessionId}` : 'achilles_workout_log';
 
   const [workoutLog, setWorkoutLog] = useState<WorkoutLog>(() => {
+    if (!currentSessionId) return {};
     const saved = localStorage.getItem(STORAGE_KEY);
     return saved ? JSON.parse(saved) : {};
   });
@@ -51,19 +51,19 @@ export function useWorkoutStorage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(workoutLog));
   }, [workoutLog]);
 
-  // Initial load from API (only if authenticated)
+  // Initial load from API (only if authenticated and session is set)
   useEffect(() => {
     async function loadFromApi() {
-      // Don't attempt to load if user is not authenticated
-      if (!user) {
+      // Don't attempt to load if user is not authenticated or no session
+      if (!user || !currentSessionId) {
         setIsLoading(false);
-        setWorkoutLog({}); // Clear data when logged out
+        setWorkoutLog({}); // Clear data when logged out or no session
         setSyncError(null); // Clear any previous errors
         return;
       }
 
       try {
-        const logs = await api.getWorkoutLogs();
+        const logs = await api.getWorkoutLogs(currentSessionId);
 
         // Convert API logs to WorkoutLog format
         const apiLogs: WorkoutLog = {};
@@ -71,9 +71,10 @@ export function useWorkoutStorage() {
           const key = `${log.phase}-${log.week}-${log.workoutNum}`;
 
           // Fetch full workout details
-          const fullLog = await api.getWorkoutLog(log.phase, log.week, log.workoutNum);
+          const fullLog = await api.getWorkoutLog(currentSessionId, log.phase, log.week, log.workoutNum);
           if (fullLog) {
             apiLogs[key] = {
+              sessionId: fullLog.sessionId,
               phase: fullLog.phase,
               week: fullLog.week,
               workoutNum: fullLog.workoutNum,
@@ -113,7 +114,7 @@ export function useWorkoutStorage() {
     }
 
     loadFromApi();
-  }, [user]); // Re-run when user changes (login/logout)
+  }, [user, currentSessionId]); // Re-run when user or session changes
 
   const saveWorkout = async (key: string, data: WorkoutLogEntry) => {
     // Update localStorage immediately
@@ -122,8 +123,8 @@ export function useWorkoutStorage() {
       [key]: data
     }));
 
-    // Don't attempt to save to API if user is not authenticated
-    if (!user) {
+    // Don't attempt to save to API if user is not authenticated or no session
+    if (!user || !currentSessionId) {
       return;
     }
 
@@ -137,7 +138,7 @@ export function useWorkoutStorage() {
     setIsSaving(true);
     try {
       const apiData = toApiFormat(data);
-      await api.saveWorkoutLog(apiData);
+      await api.saveWorkoutLog(currentSessionId, apiData);
       setSyncError(null);
     } catch (error) {
       console.error('Error saving to API:', error);
@@ -165,13 +166,13 @@ export function useWorkoutStorage() {
       return newLog;
     });
 
-    // Don't attempt to delete from API if user is not authenticated
-    if (!user) {
+    // Don't attempt to delete from API if user is not authenticated or no session
+    if (!user || !currentSessionId) {
       return;
     }
 
     // Delete from API in background
-    api.deleteWorkoutLog(phase, week, workoutNum).catch(error => {
+    api.deleteWorkoutLog(currentSessionId, phase, week, workoutNum).catch(error => {
       console.error('Error deleting from API:', error);
       setSyncError('Failed to sync with server');
     });
@@ -187,8 +188,10 @@ export function useWorkoutStorage() {
   };
 
   const refreshFromApi = async () => {
+    if (!currentSessionId) return;
+
     try {
-      const logs = await api.getWorkoutLogs();
+      const logs = await api.getWorkoutLogs(currentSessionId);
 
       // Convert API logs to WorkoutLog format
       const apiLogs: WorkoutLog = {};
@@ -196,9 +199,10 @@ export function useWorkoutStorage() {
         const key = `${log.phase}-${log.week}-${log.workoutNum}`;
 
         // Fetch full workout details
-        const fullLog = await api.getWorkoutLog(log.phase, log.week, log.workoutNum);
+        const fullLog = await api.getWorkoutLog(currentSessionId, log.phase, log.week, log.workoutNum);
         if (fullLog) {
           apiLogs[key] = {
+            sessionId: fullLog.sessionId,
             phase: fullLog.phase,
             week: fullLog.week,
             workoutNum: fullLog.workoutNum,

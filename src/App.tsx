@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from './contexts/AuthContext';
+import { useSession } from './contexts/SessionContext';
 import { useWorkoutStorage } from './hooks/useWorkoutStorage';
 import { WORKOUT_DATA } from './data/workoutData';
 import { ExerciseLog } from './types';
@@ -8,6 +9,7 @@ import Auth from './components/Auth';
 import Header from './components/Header';
 import SideNav from './components/SideNav';
 import Toast from './components/Toast';
+import CreateSessionModal from './components/CreateSessionModal';
 import PhaseSelection from './components/PhaseSelection';
 import WeekSelection from './components/WeekSelection';
 import WorkoutSelection from './components/WorkoutSelection';
@@ -34,6 +36,7 @@ type ViewType = typeof VIEWS[keyof typeof VIEWS];
 
 export default function App() {
   const { user, loading: authLoading } = useAuth();
+  const { currentSession, isLoading: sessionLoading, createSession } = useSession();
   const [view, setView] = useState<ViewType>(VIEWS.PHASE);
   const [currentPhase, setCurrentPhase] = useState<number | null>(null);
   const [currentWeek, setCurrentWeek] = useState<number | null>(null);
@@ -41,6 +44,7 @@ export default function App() {
   const [selectedHistoryKey, setSelectedHistoryKey] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [isRefreshingHistory, setIsRefreshingHistory] = useState(false);
+  const [isCreateSessionModalOpen, setIsCreateSessionModalOpen] = useState(false);
 
   const {
     workoutLog,
@@ -51,14 +55,51 @@ export default function App() {
     isLoading,
     syncError,
     refreshFromApi
-  } = useWorkoutStorage();
+  } = useWorkoutStorage(currentSession?.id || null);
 
   const showToast = useCallback((message: string) => {
     setToast(message);
   }, []);
 
+  // Reset navigation when session changes
+  useEffect(() => {
+    if (currentSession) {
+      setView(VIEWS.PHASE);
+      setCurrentPhase(null);
+      setCurrentWeek(null);
+      setCurrentWorkout(null);
+      setSelectedHistoryKey(null);
+    }
+  }, [currentSession?.id]);
+
+  // Check if there's an in-progress workout
+  const hasInProgressWorkout = useCallback(() => {
+    if (!currentPhase || !currentWeek || !currentWorkout) return false;
+    const key = `${currentPhase}-${currentWeek}-${currentWorkout}`;
+    const workout = getWorkout(key);
+    return workout !== undefined && !workout.completed;
+  }, [currentPhase, currentWeek, currentWorkout, getWorkout]);
+
+  const handleCreateSession = async (name: string, description: string, makeActive: boolean) => {
+    try {
+      const newSession = await createSession(name, description, makeActive);
+      if (makeActive) {
+        showToast(`Switched to ${newSession.name}`);
+      } else {
+        showToast('Session created successfully');
+      }
+    } catch (error) {
+      console.error('Failed to create session:', error);
+      throw error;
+    }
+  };
+
+  const handleSessionSwitchBlocked = () => {
+    showToast('Complete or exit your current workout first');
+  };
+
   const handleSaveWorkout = useCallback((exercises: ExerciseLog[], markComplete: boolean) => {
-    if (currentPhase === null || currentWeek === null || currentWorkout === null) return;
+    if (currentPhase === null || currentWeek === null || currentWorkout === null || !currentSession) return;
 
     const key = `${currentPhase}-${currentWeek}-${currentWorkout}`;
     const existingEntry = getWorkout(key);
@@ -66,6 +107,7 @@ export default function App() {
     const now = new Date().toISOString();
 
     saveWorkout(key, {
+      sessionId: currentSession.id,
       phase: currentPhase,
       week: currentWeek,
       workoutNum: currentWorkout,
@@ -84,10 +126,10 @@ export default function App() {
         setView(VIEWS.WORKOUT);
       }, 500);
     }
-  }, [currentPhase, currentWeek, currentWorkout, getWorkout, saveWorkout, showToast, setView]);
+  }, [currentPhase, currentWeek, currentWorkout, currentSession, getWorkout, saveWorkout, showToast, setView]);
 
   // Show auth screen if not logged in (AFTER all hooks are called)
-  if (authLoading) {
+  if (authLoading || sessionLoading) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <p>Loading...</p>
@@ -97,6 +139,15 @@ export default function App() {
 
   if (!user) {
     return <Auth />;
+  }
+
+  // Wait for session to be loaded
+  if (!currentSession) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <p>Loading session...</p>
+      </div>
+    );
   }
 
   const handleSelectPhase = (phase: number) => {
@@ -252,7 +303,11 @@ export default function App() {
   if (isLoading) {
     return (
       <>
-        <Header />
+        <Header
+          onCreateSession={() => setIsCreateSessionModalOpen(true)}
+          onSessionSwitchBlocked={handleSessionSwitchBlocked}
+          hasInProgressWorkout={hasInProgressWorkout()}
+        />
         <div className="app-layout">
           <SideNav onHistoryClick={handleHistoryClick} onStatsClick={handleStatsClick} onAbsClick={handleAbsClick} />
           <main className="main-content">
@@ -267,7 +322,11 @@ export default function App() {
 
   return (
     <>
-      <Header />
+      <Header
+        onCreateSession={() => setIsCreateSessionModalOpen(true)}
+        onSessionSwitchBlocked={handleSessionSwitchBlocked}
+        hasInProgressWorkout={hasInProgressWorkout()}
+      />
       <div className="app-layout">
         <SideNav onHistoryClick={handleHistoryClick} onStatsClick={handleStatsClick} onAbsClick={handleAbsClick} />
         <main className="main-content">
@@ -279,6 +338,11 @@ export default function App() {
           {renderView()}
         </main>
       </div>
+      <CreateSessionModal
+        isOpen={isCreateSessionModalOpen}
+        onClose={() => setIsCreateSessionModalOpen(false)}
+        onSubmit={handleCreateSession}
+      />
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </>
   );

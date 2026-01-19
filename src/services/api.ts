@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import {
   Exercise,
+  Session,
   WorkoutLogDB,
   WorkoutLogFull,
   CreateWorkoutLogRequest,
@@ -42,6 +43,7 @@ async function getExerciseId(exerciseName: string): Promise<string | null> {
  * Save or update a workout log with exercises and sets
  */
 export async function saveWorkoutLog(
+  sessionId: string,
   request: CreateWorkoutLogRequest
 ): Promise<WorkoutLogDB> {
   const userId = await getCurrentUserId();
@@ -51,6 +53,7 @@ export async function saveWorkoutLog(
     .from('workout_logs')
     .select('id')
     .eq('user_id', userId)
+    .eq('session_id', sessionId)
     .eq('phase', request.phase)
     .eq('week', request.week)
     .eq('workout_num', request.workoutNum)
@@ -91,6 +94,7 @@ export async function saveWorkoutLog(
       .from('workout_logs')
       .insert({
         user_id: userId,
+        session_id: sessionId,
         phase: request.phase,
         week: request.week,
         workout_num: request.workoutNum,
@@ -182,6 +186,7 @@ export async function saveWorkoutLog(
   return {
     id: finalLog.id,
     userId: finalLog.user_id,
+    sessionId: finalLog.session_id,
     phase: finalLog.phase,
     week: finalLog.week,
     workoutNum: finalLog.workout_num,
@@ -195,15 +200,16 @@ export async function saveWorkoutLog(
 }
 
 /**
- * Get all workout logs for the current user
+ * Get all workout logs for the current user and session
  */
-export async function getWorkoutLogs(): Promise<WorkoutLogDB[]> {
+export async function getWorkoutLogs(sessionId: string): Promise<WorkoutLogDB[]> {
   const userId = await getCurrentUserId();
 
   const { data, error } = await supabase
     .from('workout_logs')
     .select('*')
     .eq('user_id', userId)
+    .eq('session_id', sessionId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -214,6 +220,7 @@ export async function getWorkoutLogs(): Promise<WorkoutLogDB[]> {
   return data.map((log) => ({
     id: log.id,
     userId: log.user_id,
+    sessionId: log.session_id,
     phase: log.phase,
     week: log.week,
     workoutNum: log.workout_num,
@@ -230,6 +237,7 @@ export async function getWorkoutLogs(): Promise<WorkoutLogDB[]> {
  * Get a specific workout log with all exercises and sets
  */
 export async function getWorkoutLog(
+  sessionId: string,
   phase: number,
   week: number,
   workoutNum: number
@@ -240,6 +248,7 @@ export async function getWorkoutLog(
     .from('workout_logs')
     .select('*')
     .eq('user_id', userId)
+    .eq('session_id', sessionId)
     .eq('phase', phase)
     .eq('week', week)
     .eq('workout_num', workoutNum)
@@ -303,6 +312,7 @@ export async function getWorkoutLog(
   return {
     id: workoutLog.id,
     userId: workoutLog.user_id,
+    sessionId: workoutLog.session_id,
     phase: workoutLog.phase,
     week: workoutLog.week,
     workoutNum: workoutLog.workout_num,
@@ -320,6 +330,7 @@ export async function getWorkoutLog(
  * Delete a workout log
  */
 export async function deleteWorkoutLog(
+  sessionId: string,
   phase: number,
   week: number,
   workoutNum: number
@@ -330,6 +341,7 @@ export async function deleteWorkoutLog(
     .from('workout_logs')
     .delete()
     .eq('user_id', userId)
+    .eq('session_id', sessionId)
     .eq('phase', phase)
     .eq('week', week)
     .eq('workout_num', workoutNum);
@@ -362,4 +374,210 @@ export async function getExercises(): Promise<Exercise[]> {
     equipment: exercise.equipment,
     createdAt: exercise.created_at,
   }));
+}
+
+// ============================================
+// Session Management Functions
+// ============================================
+
+/**
+ * Get all sessions for the current user
+ */
+export async function getSessions(): Promise<Session[]> {
+  const userId = await getCurrentUserId();
+
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching sessions:', error);
+    throw new Error('Failed to fetch sessions');
+  }
+
+  if (!data) {
+    return [];
+  }
+
+  return data.map((session) => ({
+    id: session.id,
+    userId: session.user_id,
+    name: session.name,
+    description: session.description,
+    isActive: session.is_active,
+    createdAt: session.created_at,
+    updatedAt: session.updated_at,
+  }));
+}
+
+/**
+ * Get the active session for the current user
+ */
+export async function getActiveSession(): Promise<Session | null> {
+  const userId = await getCurrentUserId();
+
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return {
+    id: data.id,
+    userId: data.user_id,
+    name: data.name,
+    description: data.description,
+    isActive: data.is_active,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+}
+
+/**
+ * Create a new session
+ */
+export async function createSession(
+  name: string,
+  description?: string,
+  makeActive: boolean = false
+): Promise<Session> {
+  const userId = await getCurrentUserId();
+
+  // If makeActive is true, deactivate all other sessions first
+  if (makeActive) {
+    const { error: deactivateError } = await supabase
+      .from('sessions')
+      .update({ is_active: false })
+      .eq('user_id', userId)
+      .eq('is_active', true);
+
+    if (deactivateError) {
+      console.error('Error deactivating sessions:', deactivateError);
+      // Continue anyway - the insert might still work
+    }
+  }
+
+  const { data, error } = await supabase
+    .from('sessions')
+    .insert({
+      user_id: userId,
+      name,
+      description: description || null,
+      is_active: makeActive,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating session:', error);
+    throw new Error('Failed to create session');
+  }
+
+  return {
+    id: data.id,
+    userId: data.user_id,
+    name: data.name,
+    description: data.description,
+    isActive: data.is_active,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+}
+
+/**
+ * Create default session for a new user
+ */
+export async function createDefaultSession(): Promise<Session> {
+  return createSession(
+    'Default Session',
+    'Your first training session',
+    true
+  );
+}
+
+/**
+ * Update a session (for renaming)
+ */
+export async function updateSession(
+  sessionId: string,
+  updates: { name?: string; description?: string }
+): Promise<Session> {
+  const userId = await getCurrentUserId();
+
+  const { data, error } = await supabase
+    .from('sessions')
+    .update({
+      ...(updates.name && { name: updates.name }),
+      ...(updates.description !== undefined && { description: updates.description }),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', sessionId)
+    .eq('user_id', userId) // Ensure user owns this session
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating session:', error);
+    throw new Error('Failed to update session');
+  }
+
+  return {
+    id: data.id,
+    userId: data.user_id,
+    name: data.name,
+    description: data.description,
+    isActive: data.is_active,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+}
+
+/**
+ * Set a session as active (and deactivate all others)
+ */
+export async function setActiveSession(sessionId: string): Promise<void> {
+  const userId = await getCurrentUserId();
+
+  // Deactivate all sessions for this user
+  await supabase
+    .from('sessions')
+    .update({ is_active: false })
+    .eq('user_id', userId);
+
+  // Activate the specified session
+  const { error } = await supabase
+    .from('sessions')
+    .update({ is_active: true, updated_at: new Date().toISOString() })
+    .eq('id', sessionId)
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error setting active session:', error);
+    throw new Error('Failed to set active session');
+  }
+}
+
+/**
+ * Delete a session (and all its workout logs via CASCADE)
+ */
+export async function deleteSession(sessionId: string): Promise<void> {
+  const userId = await getCurrentUserId();
+
+  const { error } = await supabase
+    .from('sessions')
+    .delete()
+    .eq('id', sessionId)
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error deleting session:', error);
+    throw new Error('Failed to delete session');
+  }
 }

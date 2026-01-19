@@ -31,6 +31,7 @@ export interface ExerciseLog {
 }
 
 export interface WorkoutLogEntry {
+  sessionId: string;
   phase: number;
   week: number;
   workoutNum: number;

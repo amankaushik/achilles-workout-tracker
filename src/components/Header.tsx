@@ -1,6 +1,13 @@
 import { useAuth } from '../contexts/AuthContext';
+import SessionSwitcher from './SessionSwitcher';
 
-export default function Header() {
+interface HeaderProps {
+  onCreateSession: () => void;
+  onSessionSwitchBlocked: () => void;
+  hasInProgressWorkout: boolean;
+}
+
+export default function Header({ onCreateSession, onSessionSwitchBlocked, hasInProgressWorkout }: HeaderProps) {
   const { user, signOut } = useAuth();
 
   return (
@@ -9,6 +16,11 @@ export default function Header() {
       <div className="user-section">
         {user && (
           <>
+            <SessionSwitcher
+              onCreateNew={onCreateSession}
+              onSwitchBlocked={onSessionSwitchBlocked}
+              hasInProgressWorkout={hasInProgressWorkout}
+            />
             <span className="user-email">{user.email}</span>
             <button className="logout-btn" onClick={signOut}>
               Logout
