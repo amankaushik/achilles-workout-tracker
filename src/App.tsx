@@ -45,6 +45,9 @@ export default function App() {
   const [toast, setToast] = useState<string | null>(null);
   const [isRefreshingHistory, setIsRefreshingHistory] = useState(false);
   const [isCreateSessionModalOpen, setIsCreateSessionModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
 
   const {
     workoutLog,
@@ -307,9 +310,15 @@ export default function App() {
           onCreateSession={() => setIsCreateSessionModalOpen(true)}
           onSessionSwitchBlocked={handleSessionSwitchBlocked}
           hasInProgressWorkout={hasInProgressWorkout()}
+          onMenuClick={toggleSidebar}
         />
         <div className="app-layout">
-          <SideNav onHistoryClick={handleHistoryClick} onStatsClick={handleStatsClick} onAbsClick={handleAbsClick} />
+          <SideNav
+            onHistoryClick={handleHistoryClick}
+            onStatsClick={handleStatsClick}
+            onAbsClick={handleAbsClick}
+            isOpen={isSidebarOpen}
+          />
           <main className="main-content">
             <div style={{ padding: '2rem', textAlign: 'center' }}>
               <p>Loading workout data...</p>
@@ -326,9 +335,15 @@ export default function App() {
         onCreateSession={() => setIsCreateSessionModalOpen(true)}
         onSessionSwitchBlocked={handleSessionSwitchBlocked}
         hasInProgressWorkout={hasInProgressWorkout()}
+        onMenuClick={toggleSidebar}
       />
       <div className="app-layout">
-        <SideNav onHistoryClick={handleHistoryClick} onStatsClick={handleStatsClick} onAbsClick={handleAbsClick} />
+        <SideNav
+          onHistoryClick={handleHistoryClick}
+          onStatsClick={handleStatsClick}
+          onAbsClick={handleAbsClick}
+          isOpen={isSidebarOpen}
+        />
         <main className="main-content">
           {syncError && (
             <div style={{ padding: '0.5rem', backgroundColor: '#ff6b6b', color: 'white', textAlign: 'center' }}>

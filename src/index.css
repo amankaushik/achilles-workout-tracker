@@ -36,7 +36,8 @@ body {
 /* App Layout */
 .app-layout {
     display: flex;
-    min-height: calc(100vh - 60px); /* Subtract header height */
+    min-height: calc(100vh - 60px);
+    /* Subtract header height */
 }
 
 .main-content {
@@ -56,8 +57,17 @@ body {
     padding: var(--spacing) 8px;
     border-right: 1px solid var(--surface-light);
     position: sticky;
-    top: 60px; /* Header height */
+    top: 60px;
+    /* Header height */
     height: calc(100vh - 60px);
+    transition: width 0.3s ease, padding 0.3s ease, border 0.3s ease;
+    overflow: hidden;
+}
+
+.sidenav.closed {
+    width: 0;
+    padding: var(--spacing) 0;
+    border-right: none;
 }
 
 .sidenav-btn {
@@ -107,6 +117,30 @@ body {
     color: var(--primary);
     font-weight: 700;
     letter-spacing: 2px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.menu-btn:hover {
+    background: var(--surface-light);
 }
 
 .header-btn {
@@ -173,7 +207,8 @@ body {
     gap: 8px;
 }
 
-.phase-card:hover, .phase-card:active {
+.phase-card:hover,
+.phase-card:active {
     border-color: var(--primary);
     transform: translateY(-2px);
 }
@@ -212,7 +247,8 @@ body {
     text-align: center;
 }
 
-.week-card:hover, .week-card:active {
+.week-card:hover,
+.week-card:active {
     border-color: var(--secondary);
 }
 
@@ -250,7 +286,8 @@ body {
     align-items: center;
 }
 
-.workout-card:hover, .workout-card:active {
+.workout-card:hover,
+.workout-card:active {
     border-color: var(--primary);
 }
 
@@ -695,6 +732,7 @@ body {
         opacity: 0;
         transform: translateX(-50%) translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
@@ -1356,6 +1394,7 @@ body {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -1376,6 +1415,7 @@ body {
         transform: translateY(20px);
         opacity: 0;
     }
+
     to {
         transform: translateY(0);
         opacity: 1;

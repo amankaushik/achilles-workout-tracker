@@ -5,14 +5,20 @@ interface HeaderProps {
   onCreateSession: () => void;
   onSessionSwitchBlocked: () => void;
   hasInProgressWorkout: boolean;
+  onMenuClick: () => void;
 }
 
-export default function Header({ onCreateSession, onSessionSwitchBlocked, hasInProgressWorkout }: HeaderProps) {
+export default function Header({ onCreateSession, onSessionSwitchBlocked, hasInProgressWorkout, onMenuClick }: HeaderProps) {
   const { user, signOut } = useAuth();
 
   return (
     <header className="header">
-      <h1>Achilles</h1>
+      <div className="header-left">
+        <button className="menu-btn" onClick={onMenuClick}>
+          ☰
+        </button>
+        <h1>Achilles</h1>
+      </div>
       <div className="user-section">
         {user && (
           <>
