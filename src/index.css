@@ -1400,6 +1400,12 @@ body {
     }
 }
 
+.stopwatch-modal-overlay.hidden {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
 .stopwatch-modal {
     background: var(--surface);
     border: 2px solid var(--surface-light);

@@ -176,23 +176,21 @@ export default function WorkoutTracking({
       </button>
 
       {/* Stopwatch Modal */}
-      {isStopwatchOpen && (
-        <div className="stopwatch-modal-overlay">
-          <div className="stopwatch-modal">
-            <div className="stopwatch-modal-header">
-              <h3>Stopwatch</h3>
-              <button
-                className="stopwatch-modal-close"
-                onClick={() => setIsStopwatchOpen(false)}
-                aria-label="Close stopwatch"
-              >
-                ✕
-              </button>
-            </div>
-            <Stopwatch />
+      <div className={`stopwatch-modal-overlay ${!isStopwatchOpen ? 'hidden' : ''}`}>
+        <div className="stopwatch-modal">
+          <div className="stopwatch-modal-header">
+            <h3>Stopwatch</h3>
+            <button
+              className="stopwatch-modal-close"
+              onClick={() => setIsStopwatchOpen(false)}
+              aria-label="Close stopwatch"
+            >
+              ✕
+            </button>
           </div>
+          <Stopwatch />
         </div>
-      )}
+      </div>
     </section>
   );
 }

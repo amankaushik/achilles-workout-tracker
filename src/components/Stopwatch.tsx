@@ -1,24 +1,37 @@
 import { useState, useEffect, useRef } from 'react';
 
 export default function Stopwatch() {
-  const [time, setTime] = useState(0); // Time in milliseconds
+  const [displayedTime, setDisplayedTime] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
-  const intervalRef = useRef<number | null>(null);
+
+  // Refs to maintain state without re-rendering
+  const startTimeRef = useRef<number>(0);
+  const accumulatedTimeRef = useRef<number>(0);
+  const requestRef = useRef<number>();
+
+  const updateTime = () => {
+    if (startTimeRef.current) {
+      const now = Date.now();
+      const currentElapsed = (now - startTimeRef.current) + accumulatedTimeRef.current;
+      setDisplayedTime(currentElapsed);
+      requestRef.current = requestAnimationFrame(updateTime);
+    }
+  };
 
   useEffect(() => {
     if (isRunning) {
-      intervalRef.current = window.setInterval(() => {
-        setTime(prevTime => prevTime + 10);
-      }, 10);
+      startTimeRef.current = Date.now();
+      requestRef.current = requestAnimationFrame(updateTime);
     } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
       }
+      accumulatedTimeRef.current = displayedTime;
     }
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
       }
     };
   }, [isRunning]);
@@ -29,7 +42,9 @@ export default function Stopwatch() {
 
   const handleReset = () => {
     setIsRunning(false);
-    setTime(0);
+    setDisplayedTime(0);
+    accumulatedTimeRef.current = 0;
+    startTimeRef.current = 0;
   };
 
   const formatTime = (milliseconds: number) => {
@@ -43,7 +58,7 @@ export default function Stopwatch() {
 
   return (
     <div className="stopwatch">
-      <div className="stopwatch-display">{formatTime(time)}</div>
+      <div className="stopwatch-display">{formatTime(displayedTime)}</div>
       <div className="stopwatch-controls">
         <button
           className={`stopwatch-btn ${isRunning ? 'pause' : 'start'}`}
