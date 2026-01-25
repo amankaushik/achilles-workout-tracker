@@ -230,6 +230,27 @@ body {
     color: var(--text-muted);
 }
 
+/* Context Header */
+.view-header-context {
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.context-session {
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    color: var(--primary);
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.context-program {
+    font-size: 1.75rem;
+    color: var(--text);
+    margin: 0;
+}
+
 /* Week Grid */
 .week-grid {
     display: grid;
@@ -1518,4 +1539,422 @@ body {
 .stopwatch-btn.reset:hover {
     background: var(--secondary);
     transform: translateY(-2px);
+}
+
+/* Programs View */
+
+.active-session-banner {
+    background: var(--surface-light);
+    border: 1px solid var(--primary);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.active-session-banner p {
+    color: var(--text);
+    margin: 0;
+}
+
+.return-session-btn {
+    background: var(--primary);
+    color: var(--text);
+    border: none;
+    border-radius: 6px;
+    padding: 8px 24px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.return-session-btn:hover {
+    background: var(--primary-dark);
+}
+
+.programs-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing);
+    margin-top: var(--spacing);
+}
+
+.program-card {
+    background: var(--surface);
+    border-radius: var(--border-radius);
+    padding: calc(var(--spacing) * 1.5);
+    border: 1px solid var(--surface-light);
+    transition: all 0.2s;
+}
+
+.program-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.program-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.program-header h2 {
+    font-size: 1.5rem;
+    color: var(--text);
+    margin: 0;
+}
+
+.badge {
+    background: var(--primary);
+    color: var(--text);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.program-description {
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    line-height: 1.6;
+}
+
+.program-info {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 16px;
+    padding: 12px 0;
+    border-top: 1px solid var(--surface-light);
+    border-bottom: 1px solid var(--surface-light);
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-label {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.info-value {
+    color: var(--text);
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.program-card .btn {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.program-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.program-actions button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+}
+
+.program-view-btn {
+    background: var(--surface-light);
+    color: var(--text);
+    border: 1px solid var(--surface-light);
+}
+
+.program-view-btn:hover {
+    background: var(--secondary);
+    border-color: var(--secondary);
+    transform: translateY(-2px);
+}
+
+.program-start-btn {
+    background: var(--primary);
+    color: var(--text);
+}
+
+.program-start-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+@media (min-width: 768px) {
+    .programs-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .main-content {
+        max-width: 1200px;
+    }
+}
+
+/* Program Detail View */
+.program-detail-view {
+    padding: var(--spacing);
+}
+
+.program-detail-header {
+    margin-bottom: var(--spacing);
+}
+
+.program-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid var(--surface-light);
+    margin-bottom: calc(var(--spacing) * 1.5);
+    overflow-x: auto;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    padding: 12px 20px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 1rem;
+    font-weight: 500;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.tab-btn:hover {
+    color: var(--text);
+    background: var(--surface);
+}
+
+.tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.tab-content {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Program Preview */
+.program-preview {
+    padding: var(--spacing);
+}
+
+.program-preview-header {
+    margin-bottom: calc(var(--spacing) * 2);
+    padding-bottom: var(--spacing);
+    border-bottom: 2px solid var(--surface-light);
+}
+
+.program-preview-header h2 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+.program-preview-description {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.phases-overview {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 1.5);
+}
+
+.phase-card {
+    background: var(--surface);
+    border-radius: var(--border-radius);
+    padding: calc(var(--spacing) * 1.5);
+    border: 1px solid var(--surface-light);
+}
+
+.phase-title {
+    font-size: 1.5rem;
+    color: var(--primary);
+    margin-bottom: var(--spacing);
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--surface-light);
+}
+
+.workouts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.workout-item {
+    background: var(--surface-light);
+    border-radius: 8px;
+    padding: 12px;
+    transition: all 0.2s;
+}
+
+.workout-item:hover {
+    background: var(--background);
+    transform: translateX(4px);
+}
+
+.workout-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.workout-number {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.workout-focus {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.exercises-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.exercises-count {
+    color: var(--secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.exercise-names {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.exercise-name {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    padding-left: 12px;
+}
+
+.more-exercises {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-style: italic;
+    padding-left: 12px;
+}
+
+/* Workouts Tab */
+.workouts-tab {
+    padding: var(--spacing);
+}
+
+.workouts-info {
+    margin-bottom: calc(var(--spacing) * 2);
+}
+
+.workouts-info h2 {
+    font-size: 1.75rem;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+.info-text {
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+.sessions-list {
+    background: var(--surface);
+    border-radius: var(--border-radius);
+    padding: calc(var(--spacing) * 1.5);
+    margin-bottom: calc(var(--spacing) * 2);
+}
+
+.sessions-list h3 {
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing);
+    color: var(--text);
+}
+
+.session-items {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.session-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: var(--surface-light);
+    border-radius: 8px;
+}
+
+.session-name {
+    color: var(--text);
+    font-weight: 500;
+}
+
+.active-badge {
+    background: var(--success);
+    color: var(--text);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.empty-text {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.action-buttons .btn {
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .action-buttons {
+        flex-direction: row;
+    }
+
+    .action-buttons .btn {
+        width: auto;
+        flex: 1;
+    }
 }

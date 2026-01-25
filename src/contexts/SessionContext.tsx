@@ -1,14 +1,17 @@
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
-import { Session } from '../types/database';
+import { Session, Program } from '../types/database';
 import * as api from '../services/api';
 import { useAuth } from './AuthContext';
+import { WorkoutDataType } from '../types';
 
 interface SessionContextType {
   currentSession: Session | null;
+  currentProgram: WorkoutDataType | null;
   sessions: Session[];
+  programs: Program[];
   isLoading: boolean;
   error: string | null;
-  createSession: (name: string, description?: string, makeActive?: boolean) => Promise<Session>;
+  createSession: (programId: string, name: string, description?: string, makeActive?: boolean) => Promise<Session>;
   switchSession: (sessionId: string) => Promise<void>;
   renameSession: (sessionId: string, newName: string) => Promise<void>;
   refreshSessions: () => Promise<void>;
@@ -19,7 +22,9 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 export function SessionProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
+  const [currentProgram, setCurrentProgram] = useState<WorkoutDataType | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [programs, setPrograms] = useState<Program[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const loadingRef = useRef(false);
@@ -40,7 +45,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     } else {
       // Clear session state when user logs out
       setCurrentSession(null);
+      setCurrentProgram(null);
       setSessions([]);
+      setPrograms([]);
       setIsLoading(false);
       loadedUserIdRef.current = null;
       // Clear localStorage
@@ -62,6 +69,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       setError(null);
 
+      // Fetch all programs first
+      const allPrograms = await api.getPrograms();
+      setPrograms(allPrograms);
+
       // Fetch all sessions
       let allSessions: Session[] = [];
       try {
@@ -73,34 +84,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
 
       if (allSessions.length === 0) {
-        // No sessions exist, create a default one
-        try {
-          const defaultSession = await api.createDefaultSession();
-          setSessions([defaultSession]);
-          setCurrentSession(defaultSession);
-          saveActiveSessionToLocalStorage(defaultSession.id);
-        } catch (createError: any) {
-          // If creation failed (e.g., due to race condition), retry fetching
-          console.warn('Failed to create default session, retrying fetch:', createError);
-
-          // Wait a moment before retrying
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          try {
-            const retryFetch = await api.getSessions();
-            if (retryFetch.length > 0) {
-              setSessions(retryFetch);
-              const activeSession = retryFetch.find(s => s.isActive) || retryFetch[0];
-              setCurrentSession(activeSession);
-              saveActiveSessionToLocalStorage(activeSession.id);
-            } else {
-              throw new Error('Unable to create or fetch sessions');
-            }
-          } catch (retryError) {
-            console.error('Retry fetch also failed:', retryError);
-            throw retryError;
-          }
-        }
+        setSessions([]);
+        setCurrentSession(null);
       } else {
         setSessions(allSessions);
 
@@ -113,15 +98,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           activeSession = allSessions.find(s => s.isActive);
         }
 
-        // If no active session found, use the first one and mark it active
-        if (!activeSession) {
+        // If still no active session (but sessions exist), don't force one.
+        // The user can select one from the list or create a new one.
+        // However, if we want to default to the first one available:
+        if (!activeSession && allSessions.length > 0) {
+          // For now, let's just picking the first one effectively as active for the UI state, 
+          // but maybe not enforcing it in DB until they act? 
+          // Actually, let's keep the logic to auto-select if multiple exist but none active, 
+          // to avoid "no session" state for returning users with data.
           activeSession = allSessions[0];
-          await api.setActiveSession(activeSession.id);
-          activeSession = { ...activeSession, isActive: true };
         }
 
-        setCurrentSession(activeSession);
-        saveActiveSessionToLocalStorage(activeSession.id);
+        if (activeSession) {
+          setCurrentSession(activeSession);
+          saveActiveSessionToLocalStorage(activeSession.id);
+          // Load the program for the active session
+          await loadProgramForSession(activeSession);
+        } else {
+          setCurrentSession(null);
+        }
       }
     } catch (err) {
       console.error('Error loading sessions:', err);
@@ -135,14 +130,27 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const loadProgramForSession = async (session: Session) => {
+    try {
+      const program = await api.getProgram(session.programId);
+      if (program) {
+        setCurrentProgram(program.structure as WorkoutDataType);
+      }
+    } catch (err) {
+      console.error('Error loading program:', err);
+      setError('Failed to load program');
+    }
+  };
+
   const createSession = async (
+    programId: string,
     name: string,
     description?: string,
     makeActive: boolean = false
   ): Promise<Session> => {
     try {
       setError(null);
-      const newSession = await api.createSession(name, description, makeActive);
+      const newSession = await api.createSession(programId, name, description, makeActive);
 
       // Add to sessions list
       setSessions(prev => [...prev, newSession]);
@@ -153,6 +161,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setSessions(prev => prev.map(s => ({ ...s, isActive: s.id === newSession.id })));
         setCurrentSession(newSession);
         saveActiveSessionToLocalStorage(newSession.id);
+
+        // Load the program for the new session
+        await loadProgramForSession(newSession);
       }
 
       return newSession;
@@ -176,6 +187,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (newSession) {
         setCurrentSession({ ...newSession, isActive: true });
         saveActiveSessionToLocalStorage(sessionId);
+
+        // Load the program for the new session
+        await loadProgramForSession(newSession);
       }
     } catch (err) {
       console.error('Error switching session:', err);
@@ -220,7 +234,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const value = {
     currentSession,
+    currentProgram,
     sessions,
+    programs,
     isLoading,
     error,
     createSession,

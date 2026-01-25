@@ -76,7 +76,7 @@ export default function SessionSwitcher({
     setEditingSessionId(null);
   };
 
-  if (isLoading || !currentSession) {
+  if (isLoading) {
     return (
       <div className="session-switcher">
         <button className="session-button" disabled>
@@ -94,7 +94,7 @@ export default function SessionSwitcher({
         title="Switch session"
       >
         <span className="session-icon">📂</span>
-        <span className="session-name">{currentSession.name}</span>
+        <span className="session-name">{currentSession ? currentSession.name : 'Select Session'}</span>
         <span className="session-arrow">{isOpen ? '▲' : '▼'}</span>
       </button>
 
@@ -105,7 +105,7 @@ export default function SessionSwitcher({
             {sessions.map((session) => (
               <div
                 key={session.id}
-                className={`session-item ${session.id === currentSession.id ? 'active' : ''}`}
+                className={`session-item ${currentSession && session.id === currentSession.id ? 'active' : ''}`}
               >
                 {editingSessionId === session.id ? (
                   <form onSubmit={(e) => handleSaveEdit(session.id, e)} className="session-edit-form">
@@ -137,7 +137,7 @@ export default function SessionSwitcher({
                       onClick={() => handleSwitchSession(session.id)}
                     >
                       <span className="session-item-name">{session.name}</span>
-                      {session.id === currentSession.id && (
+                      {currentSession && session.id === currentSession.id && (
                         <span className="session-active-badge">Current</span>
                       )}
                     </button>

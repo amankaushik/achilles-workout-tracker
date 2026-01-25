@@ -14,12 +14,18 @@ const phases: PhaseInfo[] = [
 
 interface PhaseSelectionProps {
   onSelectPhase: (phase: number) => void;
+  programName?: string;
+  sessionName?: string;
 }
 
-export default function PhaseSelection({ onSelectPhase }: PhaseSelectionProps) {
+export default function PhaseSelection({ onSelectPhase, programName, sessionName }: PhaseSelectionProps) {
   return (
     <section className="view">
-      <h2>Select Phase</h2>
+      <div className="view-header-context">
+        {sessionName && <div className="context-session">{sessionName}</div>}
+        {programName && <h2 className="context-program">{programName}</h2>}
+        {!programName && <h2>Select Phase</h2>}
+      </div>
       <div className="phase-grid">
         {phases.map((phase) => (
           <button

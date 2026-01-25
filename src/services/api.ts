@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import {
   Exercise,
+  Program,
   Session,
   WorkoutLogDB,
   WorkoutLogFull,
@@ -404,6 +405,7 @@ export async function getSessions(): Promise<Session[]> {
   return data.map((session) => ({
     id: session.id,
     userId: session.user_id,
+    programId: session.program_id,
     name: session.name,
     description: session.description,
     isActive: session.is_active,
@@ -432,6 +434,7 @@ export async function getActiveSession(): Promise<Session | null> {
   return {
     id: data.id,
     userId: data.user_id,
+    programId: data.program_id,
     name: data.name,
     description: data.description,
     isActive: data.is_active,
@@ -444,6 +447,7 @@ export async function getActiveSession(): Promise<Session | null> {
  * Create a new session
  */
 export async function createSession(
+  programId: string,
   name: string,
   description?: string,
   makeActive: boolean = false
@@ -468,6 +472,7 @@ export async function createSession(
     .from('sessions')
     .insert({
       user_id: userId,
+      program_id: programId,
       name,
       description: description || null,
       is_active: makeActive,
@@ -483,6 +488,7 @@ export async function createSession(
   return {
     id: data.id,
     userId: data.user_id,
+    programId: data.program_id,
     name: data.name,
     description: data.description,
     isActive: data.is_active,
@@ -492,10 +498,23 @@ export async function createSession(
 }
 
 /**
- * Create default session for a new user
+ * Create default session for a new user with the Achilles Program
  */
 export async function createDefaultSession(): Promise<Session> {
+  // Get the Achilles Program ID
+  const { data: achillesProgram } = await supabase
+    .from('programs')
+    .select('id')
+    .eq('name', 'Achilles Program')
+    .eq('is_system', true)
+    .single();
+
+  if (!achillesProgram) {
+    throw new Error('Achilles Program not found');
+  }
+
   return createSession(
+    achillesProgram.id,
     'Default Session',
     'Your first training session',
     true
@@ -531,6 +550,7 @@ export async function updateSession(
   return {
     id: data.id,
     userId: data.user_id,
+    programId: data.program_id,
     name: data.name,
     description: data.description,
     isActive: data.is_active,
@@ -580,4 +600,110 @@ export async function deleteSession(sessionId: string): Promise<void> {
     console.error('Error deleting session:', error);
     throw new Error('Failed to delete session');
   }
+}
+
+// ============================================
+// Program Management Functions
+// ============================================
+
+/**
+ * Get all available programs (system programs + user's custom programs)
+ */
+export async function getPrograms(): Promise<Program[]> {
+  const userId = await getCurrentUserId();
+
+  const { data, error } = await supabase
+    .from('programs')
+    .select('*')
+    .or(`is_system.eq.true,created_by.eq.${userId}`)
+    .order('is_system', { ascending: false }) // System programs first
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching programs:', error);
+    throw new Error('Failed to fetch programs');
+  }
+
+  if (!data) {
+    return [];
+  }
+
+  return data.map((program) => ({
+    id: program.id,
+    name: program.name,
+    description: program.description,
+    structure: program.structure,
+    createdBy: program.created_by,
+    isSystem: program.is_system,
+    createdAt: program.created_at,
+    updatedAt: program.updated_at,
+  }));
+}
+
+/**
+ * Get a specific program by ID
+ */
+export async function getProgram(programId: string): Promise<Program | null> {
+  const userId = await getCurrentUserId();
+
+  const { data, error } = await supabase
+    .from('programs')
+    .select('*')
+    .eq('id', programId)
+    .or(`is_system.eq.true,created_by.eq.${userId}`)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return {
+    id: data.id,
+    name: data.name,
+    description: data.description,
+    structure: data.structure,
+    createdBy: data.created_by,
+    isSystem: data.is_system,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+}
+
+/**
+ * Create a custom program (for future use)
+ */
+export async function createProgram(
+  name: string,
+  description: string,
+  structure: Record<string, any>
+): Promise<Program> {
+  const userId = await getCurrentUserId();
+
+  const { data, error } = await supabase
+    .from('programs')
+    .insert({
+      name,
+      description,
+      structure,
+      created_by: userId,
+      is_system: false,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating program:', error);
+    throw new Error('Failed to create program');
+  }
+
+  return {
+    id: data.id,
+    name: data.name,
+    description: data.description,
+    structure: data.structure,
+    createdBy: data.created_by,
+    isSystem: data.is_system,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
 }

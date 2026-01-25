@@ -13,9 +13,21 @@ export interface Exercise {
 // Supabase Auth manages auth.users table with built-in User type
 // Access via: import { User } from '@supabase/supabase-js'
 
+export interface Program {
+  id: string;
+  name: string;
+  description: string | null;
+  structure: Record<string, any>; // WorkoutDataType structure as JSON
+  createdBy: string | null;
+  isSystem: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Session {
   id: string;
   userId: string;
+  programId: string;
   name: string;
   description: string | null;
   isActive: boolean;

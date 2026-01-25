@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
+import { Program } from '../types/database';
 
 interface CreateSessionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (name: string, description: string, makeActive: boolean) => Promise<void>;
+  onSubmit: (programId: string, name: string, description: string, makeActive: boolean) => Promise<void>;
+  programs: Program[];
+  preselectedProgramId?: string | null;
 }
 
-export default function CreateSessionModal({ isOpen, onClose, onSubmit }: CreateSessionModalProps) {
+export default function CreateSessionModal({ isOpen, onClose, onSubmit, programs, preselectedProgramId }: CreateSessionModalProps) {
+  const [programId, setProgramId] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [makeActive, setMakeActive] = useState(true);
@@ -17,12 +21,19 @@ export default function CreateSessionModal({ isOpen, onClose, onSubmit }: Create
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
+      // Use preselected program if provided, otherwise default to Achilles Program
+      if (preselectedProgramId) {
+        setProgramId(preselectedProgramId);
+      } else {
+        const defaultProgram = programs.find(p => p.name === 'Achilles Program') || programs[0];
+        setProgramId(defaultProgram?.id || '');
+      }
       setName('');
       setDescription('');
       setMakeActive(true);
       setError(null);
     }
-  }, [isOpen]);
+  }, [isOpen, programs, preselectedProgramId]);
 
   // Close on ESC key
   useEffect(() => {
@@ -47,6 +58,11 @@ export default function CreateSessionModal({ isOpen, onClose, onSubmit }: Create
     e.preventDefault();
     setError(null);
 
+    if (programId === '') {
+      setError('Please select a program');
+      return;
+    }
+
     if (name.trim() === '') {
       setError('Session name is required');
       return;
@@ -54,7 +70,7 @@ export default function CreateSessionModal({ isOpen, onClose, onSubmit }: Create
 
     setIsSubmitting(true);
     try {
-      await onSubmit(name.trim(), description.trim(), makeActive);
+      await onSubmit(programId, name.trim(), description.trim(), makeActive);
       onClose();
     } catch (err) {
       console.error('Error creating session:', err);
@@ -78,6 +94,31 @@ export default function CreateSessionModal({ isOpen, onClose, onSubmit }: Create
 
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
+            <label htmlFor="program-select" className="form-label">
+              Program *
+            </label>
+            <select
+              id="program-select"
+              className="form-input"
+              value={programId}
+              onChange={(e) => setProgramId(e.target.value)}
+              disabled={isSubmitting}
+            >
+              <option value="" disabled>Select a program</option>
+              {programs.map(program => (
+                <option key={program.id} value={program.id}>
+                  {program.name}
+                </option>
+              ))}
+            </select>
+            {programId && (
+              <p className="form-helper-text">
+                {programs.find(p => p.id === programId)?.description || ''}
+              </p>
+            )}
+          </div>
+
+          <div className="form-group">
             <label htmlFor="session-name" className="form-label">
               Session Name *
             </label>
@@ -89,7 +130,6 @@ export default function CreateSessionModal({ isOpen, onClose, onSubmit }: Create
               onChange={(e) => setName(e.target.value)}
               maxLength={50}
               placeholder="e.g., Spring 2026, Competition Prep"
-              autoFocus
               disabled={isSubmitting}
             />
           </div>

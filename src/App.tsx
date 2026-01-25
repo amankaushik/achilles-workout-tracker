@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { useSession } from './contexts/SessionContext';
 import { useWorkoutStorage } from './hooks/useWorkoutStorage';
-import { WORKOUT_DATA } from './data/workoutData';
 import { ExerciseLog } from './types';
 
 import Auth from './components/Auth';
@@ -10,6 +9,7 @@ import Header from './components/Header';
 import SideNav from './components/SideNav';
 import Toast from './components/Toast';
 import CreateSessionModal from './components/CreateSessionModal';
+import ProgramDetailView from './components/ProgramDetailView';
 import PhaseSelection from './components/PhaseSelection';
 import WeekSelection from './components/WeekSelection';
 import WorkoutSelection from './components/WorkoutSelection';
@@ -18,10 +18,13 @@ import WorkoutTracking from './components/WorkoutTracking';
 import HistoryView from './components/HistoryView';
 import HistoryDetail from './components/HistoryDetail';
 import AbsView from './components/AbsView';
+import ProgramSelection from './components/ProgramSelection';
 
 const StatsView = lazy(() => import('./components/StatsView'));
 
 const VIEWS = {
+  PROGRAMS: 'programs',
+  PROGRAM_DETAIL: 'programDetail',
   PHASE: 'phase',
   WEEK: 'week',
   WORKOUT: 'workout',
@@ -37,8 +40,9 @@ type ViewType = typeof VIEWS[keyof typeof VIEWS];
 
 export default function App() {
   const { user, loading: authLoading } = useAuth();
-  const { currentSession, isLoading: sessionLoading, createSession } = useSession();
-  const [view, setView] = useState<ViewType>(VIEWS.PHASE);
+  const { currentSession, currentProgram, programs, sessions, isLoading: sessionLoading, createSession } = useSession();
+  const [view, setView] = useState<ViewType | null>(null);
+  const [viewingProgram, setViewingProgram] = useState<string | null>(null);
   const [currentPhase, setCurrentPhase] = useState<number | null>(null);
   const [currentWeek, setCurrentWeek] = useState<number | null>(null);
   const [currentWorkout, setCurrentWorkout] = useState<number | null>(null);
@@ -46,7 +50,9 @@ export default function App() {
   const [toast, setToast] = useState<string | null>(null);
   const [isRefreshingHistory, setIsRefreshingHistory] = useState(false);
   const [isCreateSessionModalOpen, setIsCreateSessionModalOpen] = useState(false);
+  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
 
@@ -65,16 +71,39 @@ export default function App() {
     setToast(message);
   }, []);
 
-  // Reset navigation when session changes
+  // Initialize view based on session state
   useEffect(() => {
-    if (currentSession) {
+    // Wait for session loading to complete and auth to finish
+    if (sessionLoading || authLoading) return;
+
+    // Only initialize once
+    if (hasInitialized) return;
+
+    if (currentSession && currentProgram) {
+      // Existing user with active session -> go to phase selection (active program dashboard)
+      setViewingProgram(currentSession.programId);
+      setView(VIEWS.PHASE);
+      setHasInitialized(true);
+    } else if (!currentSession) {
+      // No active session -> go to programs list
+      setView(VIEWS.PROGRAMS);
+      setHasInitialized(true);
+    }
+  }, [sessionLoading, authLoading, currentSession, currentProgram, hasInitialized]);
+
+  // When session switches, navigate to that session's dashboard
+  useEffect(() => {
+    if (hasInitialized && currentSession && currentProgram) {
+      // Also update view if we are just switching sessions even if program is same, 
+      // ensuring we land on the dashboard
+      setViewingProgram(currentSession.programId);
       setView(VIEWS.PHASE);
       setCurrentPhase(null);
       setCurrentWeek(null);
       setCurrentWorkout(null);
       setSelectedHistoryKey(null);
     }
-  }, [currentSession?.id]);
+  }, [currentSession?.id, currentProgram, hasInitialized]);
 
   // Check if there's an in-progress workout
   const hasInProgressWorkout = useCallback(() => {
@@ -84,9 +113,9 @@ export default function App() {
     return workout !== undefined && !workout.completed;
   }, [currentPhase, currentWeek, currentWorkout, getWorkout]);
 
-  const handleCreateSession = async (name: string, description: string, makeActive: boolean) => {
+  const handleCreateSession = async (programId: string, name: string, description: string, makeActive: boolean) => {
     try {
-      const newSession = await createSession(name, description, makeActive);
+      const newSession = await createSession(programId, name, description, makeActive);
       if (makeActive) {
         showToast(`Switched to ${newSession.name}`);
       } else {
@@ -103,11 +132,11 @@ export default function App() {
   };
 
   const handleSaveWorkout = useCallback((exercises: ExerciseLog[], markComplete: boolean) => {
-    if (currentPhase === null || currentWeek === null || currentWorkout === null || !currentSession) return;
+    if (currentPhase === null || currentWeek === null || currentWorkout === null || !currentSession || !currentProgram) return;
 
     const key = `${currentPhase}-${currentWeek}-${currentWorkout}`;
     const existingEntry = getWorkout(key);
-    const workout = WORKOUT_DATA[currentPhase].workouts[currentWorkout];
+    const workout = currentProgram[currentPhase].workouts[currentWorkout];
     const now = new Date().toISOString();
 
     saveWorkout(key, {
@@ -130,7 +159,7 @@ export default function App() {
         setView(VIEWS.WORKOUT);
       }, 500);
     }
-  }, [currentPhase, currentWeek, currentWorkout, currentSession, getWorkout, saveWorkout, showToast, setView]);
+  }, [currentPhase, currentWeek, currentWorkout, currentSession, currentProgram, getWorkout, saveWorkout, showToast, setView]);
 
   // Show auth screen if not logged in (AFTER all hooks are called)
   if (authLoading || sessionLoading) {
@@ -145,11 +174,20 @@ export default function App() {
     return <Auth />;
   }
 
-  // Wait for session to be loaded
-  if (!currentSession) {
+  // Wait for initial view to be determined
+  if (!hasInitialized || view === null) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <p>Loading session...</p>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  // If user has an active session but program hasn't loaded yet, wait
+  if (currentSession && !currentProgram) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <p>Loading program...</p>
       </div>
     );
   }
@@ -187,19 +225,26 @@ export default function App() {
     setView(VIEWS.TRACKING);
   };
 
-  const handleHistoryClick = async () => {
-    setIsRefreshingHistory(true);
-    setView(VIEWS.HISTORY);
-    await refreshFromApi();
-    setIsRefreshingHistory(false);
+  const handleBackToPrograms = () => {
+    setView(VIEWS.PROGRAMS);
+    setViewingProgram(null);
   };
 
-  const handleStatsClick = () => {
-    setView(VIEWS.STATS);
+  const handleSelectProgram = (programId: string) => {
+    setViewingProgram(programId);
+    setView(VIEWS.PROGRAM_DETAIL);
   };
 
-  const handleAbsClick = () => {
-    setView(VIEWS.ABS);
+  const handleStartWorkoutsFromProgram = () => {
+    // Navigate to phase selection (assuming active session is for this program)
+    setView(VIEWS.PHASE);
+  };
+
+  const handleCreateSessionFromProgram = () => {
+    if (viewingProgram) {
+      setSelectedProgramId(viewingProgram);
+    }
+    setIsCreateSessionModalOpen(true);
   };
 
   const handleSelectHistoryEntry = (key: string) => {
@@ -219,10 +264,68 @@ export default function App() {
     setView(toView);
   };
 
+  const handleHistoryClick = () => {
+    setIsRefreshingHistory(true);
+    refreshFromApi().finally(() => setIsRefreshingHistory(false));
+    setView(VIEWS.HISTORY);
+    setSelectedHistoryKey(null);
+  };
+
+  const handleStatsClick = () => {
+    setView(VIEWS.STATS);
+  };
+
+  const handleAbsClick = () => {
+    setView(VIEWS.ABS);
+  };
+
   const renderView = () => {
+    if (!view) {
+      return (
+        <div style={{ padding: '2rem', textAlign: 'center' }}>
+          <p>Loading...</p>
+        </div>
+      );
+    }
+
     switch (view) {
+      case VIEWS.PROGRAMS:
+        return (
+          <ProgramSelection
+            onProgramSelected={() => setView(VIEWS.PHASE)}
+            onViewProgram={handleSelectProgram}
+          />
+        );
+
+      case VIEWS.PROGRAM_DETAIL:
+        if (!viewingProgram) return null;
+        const program = programs.find(p => p.id === viewingProgram);
+        if (!program) return null;
+        return (
+          <ProgramDetailView
+            program={program}
+            sessions={sessions}
+            workoutLog={workoutLog}
+            onBack={handleBackToPrograms}
+            onStartWorkouts={handleStartWorkoutsFromProgram}
+            onCreateSession={handleCreateSessionFromProgram}
+            onSelectHistoryEntry={handleSelectHistoryEntry}
+            selectedHistoryKey={selectedHistoryKey}
+            onDeleteHistoryEntry={handleDeleteHistoryEntry}
+            onBackFromHistoryDetail={() => setSelectedHistoryKey(null)}
+            isRefreshingHistory={isRefreshingHistory}
+          />
+        );
+
       case VIEWS.PHASE:
-        return <PhaseSelection onSelectPhase={handleSelectPhase} />;
+        const activeProgram = currentSession ? programs.find(p => p.id === currentSession.programId) : null;
+        return (
+          <PhaseSelection
+            onSelectPhase={handleSelectPhase}
+            programName={activeProgram?.name}
+            sessionName={currentSession?.name}
+          />
+        );
 
       case VIEWS.WEEK:
         if (currentPhase === null) return null;
@@ -288,23 +391,32 @@ export default function App() {
         return (
           <HistoryDetail
             data={workoutLog[selectedHistoryKey]}
-            onDelete={handleDeleteHistoryEntry}
             onBack={() => handleBack(VIEWS.HISTORY)}
+            onDelete={handleDeleteHistoryEntry}
           />
         );
 
       case VIEWS.STATS:
         return (
-          <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Loading stats...</div>}>
-            <StatsView workoutLog={workoutLog} onBack={() => handleBack(VIEWS.PHASE)} />
+          <Suspense fallback={<div>Loading stats...</div>}>
+            <StatsView
+              workoutLog={workoutLog}
+              onBack={() => handleBack(VIEWS.PHASE)}
+            />
           </Suspense>
         );
 
       case VIEWS.ABS:
         return <AbsView onBack={() => handleBack(VIEWS.PHASE)} />;
 
+
       default:
-        return <PhaseSelection onSelectPhase={handleSelectPhase} />;
+        return (
+          <ProgramSelection
+            onProgramSelected={() => setView(VIEWS.PHASE)}
+            onViewProgram={handleSelectProgram}
+          />
+        );
     }
   };
 
@@ -319,10 +431,12 @@ export default function App() {
         />
         <div className="app-layout">
           <SideNav
+            onBackToPrograms={handleBackToPrograms}
             onHistoryClick={handleHistoryClick}
             onStatsClick={handleStatsClick}
             onAbsClick={handleAbsClick}
             isOpen={isSidebarOpen}
+            showSessionNav={false} // Always false during initial loading/sync
           />
           <main className="main-content">
             <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -334,6 +448,11 @@ export default function App() {
     );
   }
 
+  // Calculate whether to show session items in SideNav
+  const showSessionNav = !!currentSession &&
+    view !== VIEWS.PROGRAMS &&
+    view !== VIEWS.PROGRAM_DETAIL;
+
   return (
     <>
       <Header
@@ -344,10 +463,12 @@ export default function App() {
       />
       <div className="app-layout">
         <SideNav
+          onBackToPrograms={handleBackToPrograms}
           onHistoryClick={handleHistoryClick}
           onStatsClick={handleStatsClick}
           onAbsClick={handleAbsClick}
           isOpen={isSidebarOpen}
+          showSessionNav={showSessionNav}
         />
         <main className="main-content">
           {syncError && (
@@ -360,8 +481,13 @@ export default function App() {
       </div>
       <CreateSessionModal
         isOpen={isCreateSessionModalOpen}
-        onClose={() => setIsCreateSessionModalOpen(false)}
+        onClose={() => {
+          setIsCreateSessionModalOpen(false);
+          setSelectedProgramId(null);
+        }}
         onSubmit={handleCreateSession}
+        programs={programs}
+        preselectedProgramId={selectedProgramId}
       />
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </>
