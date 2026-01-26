@@ -1892,6 +1892,32 @@ body {
     font-family: 'Courier New', monospace;
 }
 
+/* Footer */
+.app-footer {
+    background: var(--surface);
+    border-top: 1px solid var(--surface-light);
+    margin-top: auto;
+    padding: calc(var(--spacing) * 1.5) var(--spacing);
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.footer-disclaimer {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.footer-disclaimer strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
 /* Workouts Tab */
 .workouts-tab {
     padding: var(--spacing);

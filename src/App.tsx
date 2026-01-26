@@ -8,6 +8,7 @@ import Auth from './components/Auth';
 import Header from './components/Header';
 import SideNav from './components/SideNav';
 import Toast from './components/Toast';
+import Footer from './components/Footer';
 import CreateSessionModal from './components/CreateSessionModal';
 import ProgramDetailView from './components/ProgramDetailView';
 import PhaseSelection from './components/PhaseSelection';
@@ -444,6 +445,7 @@ export default function App() {
             </div>
           </main>
         </div>
+        <Footer />
       </>
     );
   }
@@ -490,6 +492,7 @@ export default function App() {
         preselectedProgramId={selectedProgramId}
       />
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
+      <Footer />
     </>
   );
 }
