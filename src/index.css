@@ -826,6 +826,25 @@ body {
     font-size: 0.95rem;
 }
 
+.auth-disclaimer {
+    margin-top: calc(var(--spacing) * 2);
+    padding-top: calc(var(--spacing) * 1.5);
+    border-top: 1px solid var(--surface-light);
+}
+
+.auth-disclaimer p {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    margin: 0;
+    text-align: center;
+}
+
+.auth-disclaimer strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
 /* Override Supabase Auth UI styles to match our theme */
 .auth-card .supabase-auth-ui_ui-container {
     color: var(--text);

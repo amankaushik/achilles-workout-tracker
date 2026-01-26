@@ -1,6 +1,7 @@
 import { Auth as SupabaseAuth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '../lib/supabase';
+import { DISCLAIMER_TEXT } from '../constants/disclaimer';
 
 export default function Auth() {
   return (
@@ -25,6 +26,12 @@ export default function Auth() {
           providers={[]}
           redirectTo={window.location.origin}
         />
+
+        <div className="auth-disclaimer">
+          <p>
+            <strong>Disclaimer:</strong> {DISCLAIMER_TEXT}
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -1,0 +1,1 @@
+export const DISCLAIMER_TEXT = "This website is for showcase and developer's personal use purposes only. The workout programs featured are not created by the developer and are provided for demonstration purposes. Always consult with a qualified fitness professional before starting any new exercise program.";
