@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { WORKOUT_DATA } from '../data/workoutData';
 import { toRoman } from '../utils/helpers';
 import { WorkoutLogEntry, ExerciseLog, SetData } from '../types';
@@ -27,7 +27,6 @@ export default function WorkoutTracking({
   onBack
 }: WorkoutTrackingProps) {
   const workout = WORKOUT_DATA[phase].workouts[workoutNum];
-  const isInitialMount = useRef(true);
   const [isStopwatchOpen, setIsStopwatchOpen] = useState(false);
 
   const [exerciseData, setExerciseData] = useState<ExerciseFormData[]>(() => {
