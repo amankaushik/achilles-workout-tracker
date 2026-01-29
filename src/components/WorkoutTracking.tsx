@@ -36,34 +36,13 @@ export default function WorkoutTracking({
       return {
         sets: Array.from({ length: exercise.sets }, (_, setIdx) => ({
           weight: existing?.sets?.[setIdx]?.weight || '',
-          reps: existing?.sets?.[setIdx]?.reps || ''
+          reps: existing?.sets?.[setIdx]?.reps || '',
+          completed: existing?.sets?.[setIdx]?.completed || false
         })),
         notes: existing?.notes || ''
       };
     });
   });
-
-  // Auto-save when exerciseData changes (debounced)
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-
-    const timeoutId = setTimeout(() => {
-      const exercises: ExerciseLog[] = workout.exercises.map((exercise, idx) => ({
-        name: exercise.name,
-        targetSets: exercise.sets,
-        targetReps: exercise.reps,
-        sets: exerciseData[idx].sets,
-        notes: exerciseData[idx].notes
-      }));
-
-      onSave(exercises, false);
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [exerciseData, workout.exercises, onSave]);
 
   const handleSetChange = (exerciseIdx: number, setIdx: number, field: keyof SetData, value: string) => {
     setExerciseData(prev => {
@@ -85,6 +64,71 @@ export default function WorkoutTracking({
         ...newData[exerciseIdx],
         notes: value
       };
+      return newData;
+    });
+  };
+
+  const handleSetComplete = (exerciseIdx: number, setIdx: number, isChecked: boolean) => {
+    let shouldSave = false;
+
+    setExerciseData(prev => {
+      const newData = [...prev];
+      const currentSet = newData[exerciseIdx].sets[setIdx];
+
+      // If unchecking, just update the completed status
+      if (!isChecked) {
+        newData[exerciseIdx] = {
+          ...newData[exerciseIdx],
+          sets: newData[exerciseIdx].sets.map((set, idx) =>
+            idx === setIdx ? { ...set, completed: false } : set
+          )
+        };
+        shouldSave = true;
+      } else {
+        // If checking the first set (setIdx === 0), pre-fill remaining sets
+        if (setIdx === 0 && currentSet.weight && currentSet.reps) {
+          newData[exerciseIdx] = {
+            ...newData[exerciseIdx],
+            sets: newData[exerciseIdx].sets.map((set, idx) => {
+              if (idx === 0) {
+                return { ...set, completed: true };
+              } else if (!set.completed) {
+                // Pre-fill only if not already completed
+                return {
+                  weight: currentSet.weight,
+                  reps: currentSet.reps,
+                  completed: false
+                };
+              }
+              return set;
+            })
+          };
+        } else {
+          // Just mark the set as complete
+          newData[exerciseIdx] = {
+            ...newData[exerciseIdx],
+            sets: newData[exerciseIdx].sets.map((set, idx) =>
+              idx === setIdx ? { ...set, completed: true } : set
+            )
+          };
+        }
+        shouldSave = true;
+      }
+
+      // Save after state is updated
+      if (shouldSave) {
+        setTimeout(() => {
+          const exercises: ExerciseLog[] = workout.exercises.map((exercise, idx) => ({
+            name: exercise.name,
+            targetSets: exercise.sets,
+            targetReps: exercise.reps,
+            sets: newData[idx].sets,
+            notes: newData[idx].notes
+          }));
+          onSave(exercises, false);
+        }, 0);
+      }
+
       return newData;
     });
   };
@@ -124,6 +168,7 @@ export default function WorkoutTracking({
                 <span></span>
                 <span>Weight</span>
                 <span>Reps</span>
+                <span>✓</span>
               </div>
 
               {exerciseData[exerciseIdx].sets.map((set, setIdx) => (
@@ -144,6 +189,12 @@ export default function WorkoutTracking({
                     value={set.reps}
                     onChange={(e) => handleSetChange(exerciseIdx, setIdx, 'reps', e.target.value)}
                     inputMode="numeric"
+                  />
+                  <input
+                    type="checkbox"
+                    className="set-checkbox"
+                    checked={set.completed || false}
+                    onChange={(e) => handleSetComplete(exerciseIdx, setIdx, e.target.checked)}
                   />
                 </div>
               ))}

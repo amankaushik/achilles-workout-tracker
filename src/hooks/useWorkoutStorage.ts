@@ -63,7 +63,7 @@ export function useWorkoutStorage(currentSessionId: string | null) {
       }
 
       try {
-        const logs = await api.getWorkoutLogs(currentSessionId);
+        const logs = await api.getWorkoutLogs(currentSessionId, 7);
 
         // Convert API logs to WorkoutLog format
         const apiLogs: WorkoutLog = {};
@@ -191,7 +191,7 @@ export function useWorkoutStorage(currentSessionId: string | null) {
     if (!currentSessionId) return;
 
     try {
-      const logs = await api.getWorkoutLogs(currentSessionId);
+      const logs = await api.getWorkoutLogs(currentSessionId, 7);
 
       // Convert API logs to WorkoutLog format
       const apiLogs: WorkoutLog = {};

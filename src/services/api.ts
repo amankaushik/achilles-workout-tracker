@@ -84,11 +84,7 @@ export async function saveWorkoutLog(
 
     workoutLogId = updatedLog.id;
 
-    // Delete existing exercise logs (cascade will delete sets)
-    await supabase
-      .from('exercise_logs')
-      .delete()
-      .eq('workout_log_id', workoutLogId);
+    // Note: We use UPSERT for exercise_logs below, so no need to delete first
   } else {
     // Create new workout log
     const { data: newLog, error: insertError } = await supabase
@@ -115,15 +111,16 @@ export async function saveWorkoutLog(
     workoutLogId = newLog.id;
   }
 
-  // Insert exercise logs
+  // Upsert exercise logs (insert or update if exists)
   const errors = [];
   for (const exercise of request.exercises) {
     try {
       const exerciseId = await getExerciseId(exercise.exerciseName);
 
+      // Use upsert to handle both insert and update
       const { data: exerciseLog, error: exerciseError } = await supabase
         .from('exercise_logs')
-        .insert({
+        .upsert({
           workout_log_id: workoutLogId,
           exercise_id: exerciseId,
           exercise_name: exercise.exerciseName,
@@ -131,18 +128,27 @@ export async function saveWorkoutLog(
           target_sets: exercise.targetSets,
           target_reps: exercise.targetReps,
           notes: exercise.notes || null,
+        }, {
+          onConflict: 'workout_log_id,exercise_id',
+          ignoreDuplicates: false
         })
         .select()
         .single();
 
       if (exerciseError) {
-        console.error(`Error creating exercise log for "${exercise.exerciseName}":`, exerciseError);
+        console.error(`Error upserting exercise log for "${exercise.exerciseName}":`, exerciseError);
         errors.push(`Failed to save exercise: ${exercise.exerciseName}`);
         continue; // Skip to next exercise instead of throwing
       }
 
-      // Insert set logs
+      // Delete existing sets for this exercise and insert new ones
       if (exercise.sets && exercise.sets.length > 0) {
+        // Delete old sets first
+        await supabase
+          .from('set_logs')
+          .delete()
+          .eq('exercise_log_id', exerciseLog.id);
+
         const setLogs = exercise.sets.map((set) => ({
           exercise_log_id: exerciseLog.id,
           workout_log_id: workoutLogId,
@@ -201,17 +207,25 @@ export async function saveWorkoutLog(
 }
 
 /**
- * Get all workout logs for the current user and session
+ * Get workout logs for the current user and session
+ * @param sessionId - The session ID to filter by
+ * @param limit - Optional limit on number of results (defaults to all)
  */
-export async function getWorkoutLogs(sessionId: string): Promise<WorkoutLogDB[]> {
+export async function getWorkoutLogs(sessionId: string, limit?: number): Promise<WorkoutLogDB[]> {
   const userId = await getCurrentUserId();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('workout_logs')
     .select('*')
     .eq('user_id', userId)
     .eq('session_id', sessionId)
     .order('created_at', { ascending: false });
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching workout logs:', error);

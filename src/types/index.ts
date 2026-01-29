@@ -20,6 +20,7 @@ export type WorkoutDataType = Record<number, Phase>;
 export interface SetData {
   weight: string;
   reps: string;
+  completed?: boolean;
 }
 
 export interface ExerciseLog {

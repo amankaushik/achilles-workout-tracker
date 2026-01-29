@@ -25,6 +25,7 @@ export default function HistoryView({ workoutLog, onSelectEntry, onBack, isRefre
         ← Back
       </button>
       <h2>Workout History</h2>
+      <p className="history-info">Showing last 7 workouts</p>
 
       {isRefreshing && (
         <div style={{ padding: '1rem', textAlign: 'center', color: '#666' }}>
