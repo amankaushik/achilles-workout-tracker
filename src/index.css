@@ -45,6 +45,7 @@ body {
     max-width: 600px;
     margin: 0 auto;
     width: 100%;
+    overflow-x: hidden;
 }
 
 /* Side Navigation */
@@ -161,6 +162,7 @@ body {
 /* Views */
 .view {
     padding: var(--spacing);
+    overflow-x: hidden;
 }
 
 .view h2 {
@@ -1294,6 +1296,7 @@ body {
     padding: 20px;
     background: var(--surface);
     border-radius: var(--border-radius);
+    overflow: hidden;
 }
 
 .stats-section-title {
@@ -1308,6 +1311,7 @@ body {
     padding: 16px;
     background: var(--surface-light);
     border-radius: 8px;
+    overflow: hidden;
 }
 
 .exercise-chart-title {
