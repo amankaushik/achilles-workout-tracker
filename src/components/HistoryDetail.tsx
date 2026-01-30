@@ -1,3 +1,4 @@
+import { ChevronLeft } from 'lucide-react';
 import { toRoman, formatDate } from '../utils/helpers';
 import { WorkoutLogEntry } from '../types';
 
@@ -10,8 +11,8 @@ interface HistoryDetailProps {
 export default function HistoryDetail({ data, onDelete, onBack }: HistoryDetailProps) {
   return (
     <section className="view">
-      <button className="back-btn" onClick={onBack}>
-        ← Back to History
+      <button className="btn btn-ghost btn-sm back-btn" onClick={onBack}>
+        <ChevronLeft size={20} /> Back to History
       </button>
       <h2>{data.workoutName}: {data.focus}</h2>
 
@@ -60,7 +61,7 @@ export default function HistoryDetail({ data, onDelete, onBack }: HistoryDetailP
           );
         })}
 
-        <button className="delete-btn" onClick={onDelete}>
+        <button className="btn btn-danger btn-lg btn-full delete-btn" onClick={onDelete}>
           Delete This Entry
         </button>
       </div>

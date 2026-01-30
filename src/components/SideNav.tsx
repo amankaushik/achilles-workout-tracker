@@ -1,3 +1,5 @@
+import { Home, History, TrendingUp, Dumbbell } from 'lucide-react';
+
 interface SideNavProps {
   onBackToPrograms: () => void;
   onHistoryClick: () => void;
@@ -18,7 +20,7 @@ export default function SideNav({
   return (
     <nav className={`sidenav ${!isOpen ? 'closed' : ''}`}>
       <button className="sidenav-btn" onClick={onBackToPrograms} title="All Programs">
-        <span className="sidenav-icon">🏠</span>
+        <Home className="sidenav-icon" size={20} strokeWidth={2} />
         <span className="sidenav-label">Programs</span>
       </button>
 
@@ -27,17 +29,17 @@ export default function SideNav({
           <div className="sidenav-divider" style={{ height: '1px', background: 'var(--surface-light)', margin: '8px 0' }} />
 
           <button className="sidenav-btn" onClick={onHistoryClick} title="History">
-            <span className="sidenav-icon">📅</span>
+            <History className="sidenav-icon" size={20} strokeWidth={2} />
             <span className="sidenav-label">History</span>
           </button>
 
           <button className="sidenav-btn" onClick={onStatsClick} title="Statistics">
-            <span className="sidenav-icon">📈</span>
+            <TrendingUp className="sidenav-icon" size={20} strokeWidth={2} />
             <span className="sidenav-label">Stats</span>
           </button>
 
           <button className="sidenav-btn" onClick={onAbsClick} title="Abs Workout">
-            <span className="sidenav-icon">🧘</span>
+            <Dumbbell className="sidenav-icon" size={20} strokeWidth={2} />
             <span className="sidenav-label">Abs</span>
           </button>
         </>

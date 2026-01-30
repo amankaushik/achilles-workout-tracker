@@ -1,3 +1,4 @@
+import { Menu } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import SessionSwitcher from './SessionSwitcher';
 
@@ -14,8 +15,8 @@ export default function Header({ onCreateSession, onSessionSwitchBlocked, hasInP
   return (
     <header className="header">
       <div className="header-left">
-        <button className="menu-btn" onClick={onMenuClick}>
-          ☰
+        <button className="menu-btn" onClick={onMenuClick} aria-label="Toggle navigation menu">
+          <Menu size={24} strokeWidth={2} />
         </button>
         <h1>Achilles</h1>
       </div>
@@ -28,7 +29,7 @@ export default function Header({ onCreateSession, onSessionSwitchBlocked, hasInP
               hasInProgressWorkout={hasInProgressWorkout}
             />
             <span className="user-email">{user.email}</span>
-            <button className="logout-btn" onClick={signOut}>
+            <button className="btn btn-ghost btn-sm logout-btn" onClick={signOut}>
               Logout
             </button>
           </>

@@ -1,3 +1,4 @@
+import { CheckCircle2, Clock, ClipboardList, ChevronLeft } from 'lucide-react';
 import { toRoman, formatDate } from '../utils/helpers';
 import { WorkoutLog, WorkoutLogEntry } from '../types';
 
@@ -21,8 +22,8 @@ export default function HistoryView({ workoutLog, onSelectEntry, onBack, isRefre
 
   return (
     <section className="view">
-      <button className="back-btn" onClick={onBack}>
-        ← Back
+      <button className="btn btn-ghost btn-sm back-btn" onClick={onBack}>
+        <ChevronLeft size={20} /> Back
       </button>
       <h2>Workout History</h2>
       <p className="history-info">Showing last 7 workouts</p>
@@ -36,7 +37,7 @@ export default function HistoryView({ workoutLog, onSelectEntry, onBack, isRefre
       <div className="history-list">
         {entries.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">📋</div>
+            <ClipboardList className="empty-icon" size={64} strokeWidth={1.5} />
             <p>No workouts logged yet</p>
           </div>
         ) : (
@@ -60,7 +61,15 @@ export default function HistoryView({ workoutLog, onSelectEntry, onBack, isRefre
                 <div className="history-card-meta">
                   Phase {toRoman(data.phase)} - Week {data.week}
                   <span className={`history-status ${data.completed ? 'completed' : 'in-progress'}`}>
-                    {data.completed ? 'Completed' : 'In Progress'}
+                    {data.completed ? (
+                      <>
+                        <CheckCircle2 size={14} /> Completed
+                      </>
+                    ) : (
+                      <>
+                        <Clock size={14} /> In Progress
+                      </>
+                    )}
                   </span>
                 </div>
               </div>

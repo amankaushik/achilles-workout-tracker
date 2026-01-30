@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ChevronLeft, Timer, X } from 'lucide-react';
 import { WORKOUT_DATA } from '../data/workoutData';
 import { toRoman } from '../utils/helpers';
 import { WorkoutLogEntry, ExerciseLog, SetData } from '../types';
@@ -146,8 +147,8 @@ export default function WorkoutTracking({
 
   return (
     <section className="view">
-      <button className="back-btn" onClick={onBack}>
-        ← Back to Workouts
+      <button className="btn btn-ghost btn-sm back-btn" onClick={onBack}>
+        <ChevronLeft size={20} /> Back to Workouts
       </button>
 
       <div className="workout-header">
@@ -212,7 +213,7 @@ export default function WorkoutTracking({
         ))}
       </div>
 
-      <button className="save-btn primary full-width" onClick={handleMarkComplete}>
+      <button className="btn btn-primary btn-lg btn-full" onClick={handleMarkComplete}>
         Mark Complete
       </button>
 
@@ -222,7 +223,7 @@ export default function WorkoutTracking({
         onClick={() => setIsStopwatchOpen(!isStopwatchOpen)}
         aria-label="Toggle stopwatch"
       >
-        ⏱️
+        <Timer size={28} strokeWidth={2.5} />
       </button>
 
       {/* Stopwatch Modal */}
@@ -235,7 +236,7 @@ export default function WorkoutTracking({
               onClick={() => setIsStopwatchOpen(false)}
               aria-label="Close stopwatch"
             >
-              ✕
+              <X size={24} />
             </button>
           </div>
           <Stopwatch />

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { BarChart3, ChevronLeft } from 'lucide-react';
 import { WorkoutLog } from '../types';
 import {
   getAllUniqueExercises,
@@ -69,12 +70,12 @@ export default function StatsView({ workoutLog, onBack }: StatsViewProps) {
   if (!hasCompletedWorkouts) {
     return (
       <section className="view">
-        <button className="back-btn" onClick={onBack}>
-          ← Back
+        <button className="btn btn-ghost btn-sm back-btn" onClick={onBack}>
+          <ChevronLeft size={20} /> Back
         </button>
         <h2>Stats</h2>
         <div className="empty-stats">
-          <div className="empty-state-icon">📊</div>
+          <BarChart3 className="empty-icon" size={64} strokeWidth={1.5} />
           <p>Complete some workouts to see stats</p>
         </div>
       </section>
@@ -83,8 +84,8 @@ export default function StatsView({ workoutLog, onBack }: StatsViewProps) {
 
   return (
     <section className="view">
-      <button className="back-btn" onClick={onBack}>
-        ← Back
+      <button className="btn btn-ghost btn-sm back-btn" onClick={onBack}>
+        <ChevronLeft size={20} /> Back
       </button>
       <h2>Stats</h2>
 
