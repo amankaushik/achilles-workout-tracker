@@ -181,6 +181,7 @@ export default function WorkoutTracking({
                     value={set.weight}
                     onChange={(e) => handleSetChange(exerciseIdx, setIdx, 'weight', e.target.value)}
                     inputMode="decimal"
+                    disabled={existingData?.completed}
                   />
                   <input
                     type="text"
@@ -189,12 +190,14 @@ export default function WorkoutTracking({
                     value={set.reps}
                     onChange={(e) => handleSetChange(exerciseIdx, setIdx, 'reps', e.target.value)}
                     inputMode="numeric"
+                    disabled={existingData?.completed}
                   />
                   <input
                     type="checkbox"
                     className="set-checkbox"
                     checked={set.completed || false}
                     onChange={(e) => handleSetComplete(exerciseIdx, setIdx, e.target.checked)}
+                    disabled={existingData?.completed}
                   />
                 </div>
               ))}
@@ -206,6 +209,7 @@ export default function WorkoutTracking({
                   placeholder="Add notes..."
                   value={exerciseData[exerciseIdx].notes}
                   onChange={(e) => handleNotesChange(exerciseIdx, e.target.value)}
+                  disabled={existingData?.completed}
                 />
               </div>
             </div>
@@ -213,9 +217,25 @@ export default function WorkoutTracking({
         ))}
       </div>
 
-      <button className="btn btn-primary btn-lg btn-full" onClick={handleMarkComplete}>
-        Mark Complete
-      </button>
+      {!existingData?.completed && (
+        <button className="btn btn-primary btn-lg btn-full" onClick={handleMarkComplete}>
+          Mark Complete
+        </button>
+      )}
+
+      {existingData?.completed && (
+        <div className="workout-completed-message" style={{
+          textAlign: 'center',
+          padding: '16px',
+          marginTop: '8px',
+          background: 'var(--surface)',
+          borderRadius: 'var(--border-radius)',
+          color: 'var(--success)',
+          fontWeight: 600
+        }}>
+          ✓ Workout Completed
+        </div>
+      )}
 
       {/* Floating Action Button */}
       <button

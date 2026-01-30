@@ -527,6 +527,12 @@ h3 {
     opacity: 0.5;
 }
 
+.set-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: rgba(31, 43, 71, 0.3);
+}
+
 .notes-container {
     margin-top: 12px;
     padding-top: 12px;
@@ -564,6 +570,13 @@ h3 {
 
 .notes-input:hover:not(:focus) {
     border-color: rgba(69, 123, 157, 0.3);
+}
+
+.notes-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: rgba(31, 43, 71, 0.3);
+    resize: none;
 }
 
 /* Input Labels Row */
@@ -633,6 +646,18 @@ input[type="checkbox"]:checked::after {
 input[type="checkbox"]:focus-visible {
     outline: none;
     box-shadow: var(--glow-success);
+}
+
+.set-checkbox:disabled,
+input[type="checkbox"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.set-checkbox:disabled:hover,
+input[type="checkbox"]:disabled:hover {
+    transform: none;
+    border-color: var(--surface-light);
 }
 
 /* Workout Actions */
