@@ -1569,6 +1569,206 @@ input[type="checkbox"]:disabled:hover {
     font-size: 1.2rem;
     margin-bottom: 16px;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+/* Summary Stats Grid */
+.stats-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.stat-card {
+    background: var(--surface);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--surface-light);
+    transition: all 0.25s var(--ease-out-expo);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+    flex-shrink: 0;
+}
+
+.stat-card-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.stat-card-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.stat-card-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stat-card-label-wrap {
+    white-space: normal;
+    line-height: 1.2;
+    text-overflow: initial;
+    overflow: visible;
+}
+
+/* Exercise Progress Grid */
+.exercise-progress-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.exercise-progress-card {
+    background: var(--surface-light);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    border: 2px solid var(--surface-light);
+    transition: all 0.25s var(--ease-out-expo);
+    box-shadow: var(--shadow-sm);
+}
+
+.exercise-progress-card:hover {
+    border-color: var(--secondary);
+    box-shadow: var(--shadow-md);
+}
+
+.exercise-progress-header {
+    margin-bottom: 12px;
+}
+
+.exercise-progress-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+}
+
+.exercise-progress-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.exercise-stat {
+    text-align: center;
+}
+
+.exercise-stat-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.exercise-stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.exercise-trend {
+    display: inline-flex;
+    align-items: center;
+}
+
+.exercise-sparkline {
+    margin-bottom: 12px;
+    opacity: 0.8;
+}
+
+.exercise-toggle-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--surface-light);
+    color: var(--text-muted);
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.exercise-toggle-btn:hover {
+    background: var(--surface);
+    color: var(--text);
+    border-color: var(--secondary);
+}
+
+.exercise-full-chart {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--surface-light);
+}
+
+/* Calendar Intensity Colors */
+.calendar-cell.intensity-0 {
+    background: var(--surface-light);
+    opacity: 0.4;
+}
+
+.calendar-cell.intensity-1 {
+    background: rgba(42, 157, 143, 0.3);
+    border: 1px solid rgba(42, 157, 143, 0.5);
+}
+
+.calendar-cell.intensity-2 {
+    background: rgba(42, 157, 143, 0.6);
+    border: 1px solid var(--success);
+}
+
+.calendar-cell.intensity-3 {
+    background: var(--success);
+    border: 1px solid var(--success);
+}
+
+.calendar-cell.today {
+    border: 2px solid var(--primary);
+    box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.2);
+}
+
+.calendar-cell:hover {
+    transform: scale(1.1);
+    z-index: 10;
 }
 
 .exercise-chart {
@@ -1585,8 +1785,102 @@ input[type="checkbox"]:disabled:hover {
     color: var(--text);
 }
 
+/* Weekly Frequency Styles */
+.weekly-frequency-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.weekly-summary-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.weekly-summary-card {
+    background: var(--surface-light);
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid var(--surface-light);
+    box-shadow: var(--shadow-xs);
+}
+
+.weekly-summary-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.weekly-summary-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+}
+
+.weekly-chart-wrapper {
+    background: var(--surface-light);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--surface-light);
+}
+
+/* Calendar Summary Cards */
+.calendar-summary-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.calendar-summary-card {
+    background: var(--surface-light);
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--surface-light);
+    box-shadow: var(--shadow-xs);
+}
+
+.calendar-summary-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+    flex-shrink: 0;
+}
+
+.calendar-summary-content {
+    flex: 1;
+}
+
+.calendar-summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.calendar-summary-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .calendar-container {
-    max-width: 500px;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
 .calendar-header {
@@ -1628,30 +1922,139 @@ input[type="checkbox"]:disabled:hover {
     background: transparent;
 }
 
-.calendar-cell.has-workout {
-    background: var(--surface-light);
-    border: 2px solid var(--success);
-}
-
 .calendar-date {
     font-size: 0.9rem;
     color: var(--text);
     font-weight: 500;
 }
 
-.workout-indicator {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    color: var(--success);
-    font-size: 0.8rem;
-    font-weight: bold;
-}
-
 .empty-stats {
     text-align: center;
-    padding: 40px 20px;
+    padding: 60px 20px;
     color: var(--text-muted);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.empty-stats h3 {
+    color: var(--text);
+    font-size: 1.5rem;
+    margin: 16px 0 8px;
+}
+
+.empty-stats p {
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 32px;
+}
+
+.empty-stats-preview {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
+.empty-preview-item {
+    background: var(--surface);
+    padding: 16px;
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--surface-light);
+    box-shadow: var(--shadow-xs);
+}
+
+.empty-preview-item span {
+    font-size: 0.85rem;
+    color: var(--text);
+    font-weight: 500;
+}
+
+@media (max-width: 500px) {
+    .empty-stats-preview {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .stat-card-value {
+        font-size: 1.5rem;
+    }
+
+    .exercise-progress-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .exercise-progress-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .exercise-stat-value {
+        font-size: 1rem;
+    }
+
+    .stats-section {
+        padding: 16px;
+    }
+
+    .weekly-summary-cards {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .weekly-summary-value {
+        font-size: 1.75rem;
+    }
+
+    .weekly-chart-wrapper {
+        padding: 12px;
+    }
+
+    .calendar-summary-cards {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .calendar-summary-card {
+        padding: 10px;
+    }
+
+    .calendar-summary-value {
+        font-size: 1.25rem;
+    }
+}
+
+@media (min-width: 501px) and (max-width: 768px) {
+    .weekly-summary-cards,
+    .calendar-summary-cards {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+
+    .weekly-summary-card,
+    .calendar-summary-card {
+        padding: 12px;
+    }
+
+    .weekly-summary-value {
+        font-size: 1.5rem;
+    }
+
+    .calendar-summary-value {
+        font-size: 1.25rem;
+    }
 }
 
 /* Floating Action Button (FAB) for Stopwatch */

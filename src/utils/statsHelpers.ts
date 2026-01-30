@@ -189,3 +189,153 @@ export function getWorkoutCalendar(
     .map(([date, workoutCount]) => ({ date, workoutCount }))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
+
+/**
+ * Get total completed workouts count
+ */
+export function getTotalWorkouts(workoutLog: WorkoutLog): number {
+  return Object.values(workoutLog).filter(entry => entry.completed).length;
+}
+
+/**
+ * Get current workout streak (consecutive days with workouts)
+ */
+export function getCurrentStreak(workoutLog: WorkoutLog): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const workoutDates = Object.values(workoutLog)
+    .filter(entry => entry.completed && entry.completedAt)
+    .map(entry => {
+      const date = new Date(entry.completedAt!);
+      date.setHours(0, 0, 0, 0);
+      return date.getTime();
+    })
+    .sort((a, b) => b - a); // Sort descending (most recent first)
+
+  if (workoutDates.length === 0) return 0;
+
+  // Remove duplicates (same day multiple workouts)
+  const uniqueDates = Array.from(new Set(workoutDates));
+
+  let streak = 0;
+  let checkDate = today.getTime();
+
+  for (const workoutDate of uniqueDates) {
+    // Check if this workout was on checkDate
+    if (workoutDate === checkDate) {
+      streak++;
+      // Move to previous day
+      checkDate -= 24 * 60 * 60 * 1000;
+    } else if (workoutDate < checkDate) {
+      // If there's a gap of more than 1 day, streak is broken
+      const daysDiff = Math.floor((checkDate - workoutDate) / (24 * 60 * 60 * 1000));
+      if (daysDiff > 1) break;
+
+      streak++;
+      checkDate = workoutDate - 24 * 60 * 60 * 1000;
+    }
+  }
+
+  return streak;
+}
+
+/**
+ * Get workout count for current week (Monday - Sunday)
+ */
+export function getThisWeekWorkouts(workoutLog: WorkoutLog): number {
+  const today = new Date();
+
+  // Get Monday of current week
+  const dayOfWeek = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  monday.setHours(0, 0, 0, 0);
+
+  return Object.values(workoutLog).filter(entry => {
+    if (!entry.completed || !entry.completedAt) return false;
+    const completedDate = new Date(entry.completedAt);
+    return completedDate >= monday && completedDate <= today;
+  }).length;
+}
+
+/**
+ * Get best (max) weight for an exercise
+ */
+export function getBestWeight(workoutLog: WorkoutLog, exerciseName: string): number | null {
+  let maxWeight: number | null = null;
+
+  Object.values(workoutLog).forEach(entry => {
+    if (!entry.completed) return;
+
+    entry.exercises.forEach(exercise => {
+      if (exercise.name === exerciseName) {
+        exercise.sets.forEach(set => {
+          const weight = parseWeight(set.weight);
+          if (weight !== null && (maxWeight === null || weight > maxWeight)) {
+            maxWeight = weight;
+          }
+        });
+      }
+    });
+  });
+
+  return maxWeight;
+}
+
+/**
+ * Get latest weight for an exercise (from most recent workout)
+ */
+export function getLatestWeight(workoutLog: WorkoutLog, exerciseName: string): number | null {
+  const completedWorkouts = Object.values(workoutLog)
+    .filter(entry => entry.completed && entry.completedAt)
+    .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime());
+
+  for (const workout of completedWorkouts) {
+    for (const exercise of workout.exercises) {
+      if (exercise.name === exerciseName) {
+        const weights = exercise.sets
+          .map(set => parseWeight(set.weight))
+          .filter(w => w !== null) as number[];
+
+        if (weights.length > 0) {
+          return weights.reduce((sum, w) => sum + w, 0) / weights.length;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Calculate percentage change between two values
+ */
+export function calculatePercentChange(oldValue: number, newValue: number): number {
+  if (oldValue === 0) return 0;
+  return ((newValue - oldValue) / oldValue) * 100;
+}
+
+/**
+ * Get most improved exercise (highest % gain from first to latest workout)
+ */
+export function getMostImprovedExercise(workoutLog: WorkoutLog): { name: string; percentChange: number } | null {
+  const exercises = getAllUniqueExercises(workoutLog);
+  let bestImprovement: { name: string; percentChange: number } | null = null;
+
+  exercises.forEach(exerciseName => {
+    const data = getExerciseProgressionData(workoutLog, exerciseName, 90);
+
+    if (data.data.length >= 2) {
+      const firstWeight = data.data[0].avgWeight;
+      const lastWeight = data.data[data.data.length - 1].avgWeight;
+      const percentChange = calculatePercentChange(firstWeight, lastWeight);
+
+      if (bestImprovement === null || percentChange > bestImprovement.percentChange) {
+        bestImprovement = { name: exerciseName, percentChange };
+      }
+    }
+  });
+
+  return bestImprovement;
+}
