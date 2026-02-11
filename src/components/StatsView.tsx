@@ -34,6 +34,8 @@ interface StatsViewProps {
 export default function StatsView({ workoutLog, onBack }: StatsViewProps) {
   // State for expanded exercise cards
   const [expandedExercises, setExpandedExercises] = useState<Set<string>>(new Set());
+  // State for collapsible Exercise Progression section
+  const [isProgressionExpanded, setIsProgressionExpanded] = useState(true);
 
   // Get all unique exercises
   const uniqueExercises = useMemo(
@@ -204,11 +206,19 @@ export default function StatsView({ workoutLog, onBack }: StatsViewProps) {
       {/* Exercise Progression Section */}
       {exerciseData.length > 0 && (
         <div className="stats-section">
-          <h3 className="stats-section-title">
-            <TrendingUp size={20} strokeWidth={2} style={{ marginRight: '8px' }} />
-            Exercise Progression
+          <h3
+            className="stats-section-title"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+            onClick={() => setIsProgressionExpanded(!isProgressionExpanded)}
+          >
+            <span style={{ display: 'flex', alignItems: 'center' }}>
+              <TrendingUp size={20} strokeWidth={2} style={{ marginRight: '8px' }} />
+              Exercise Progression
+            </span>
+            {isProgressionExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </h3>
-          <div className="exercise-progress-grid">
+          {isProgressionExpanded && (
+            <div className="exercise-progress-grid">
             {exerciseData.map((data, idx) => {
               const bestWeight = getBestWeight(workoutLog, data.exerciseName);
               const latestWeight = getLatestWeight(workoutLog, data.exerciseName);
@@ -333,6 +343,7 @@ export default function StatsView({ workoutLog, onBack }: StatsViewProps) {
               );
             })}
           </div>
+          )}
         </div>
       )}
 
@@ -372,7 +383,10 @@ export default function StatsView({ workoutLog, onBack }: StatsViewProps) {
             {/* Chart */}
             <div className="weekly-chart-wrapper">
               <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={weeklyData} barSize={50}>
+                <BarChart
+                  data={weeklyData}
+                  margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="#1f2b47" />
                   <XAxis
                     dataKey="weekStart"
@@ -386,6 +400,7 @@ export default function StatsView({ workoutLog, onBack }: StatsViewProps) {
                     allowDecimals={false}
                   />
                   <Tooltip
+                    cursor={{ fill: 'rgba(69, 123, 157, 0.2)' }}
                     contentStyle={{
                       backgroundColor: '#16213e',
                       border: '1px solid #1f2b47',
@@ -399,6 +414,7 @@ export default function StatsView({ workoutLog, onBack }: StatsViewProps) {
                     dataKey="workoutCount"
                     fill="#e63946"
                     radius={[8, 8, 0, 0]}
+                    maxBarSize={80}
                   />
                 </BarChart>
               </ResponsiveContainer>

@@ -1,3 +1,5 @@
+import { ChevronLeft } from 'lucide-react';
+
 interface AbsViewProps {
   onBack: () => void;
 }
@@ -5,8 +7,8 @@ interface AbsViewProps {
 export default function AbsView({ onBack }: AbsViewProps) {
   return (
     <section className="view">
-      <button className="back-btn" onClick={onBack}>
-        ← Back
+      <button className="btn btn-ghost btn-sm back-btn" onClick={onBack}>
+        <ChevronLeft size={20} /> Back
       </button>
       <h2>Abdominal Exercises</h2>
 
