@@ -285,44 +285,54 @@ export async function getWorkoutLog(
     throw new Error('Failed to fetch exercise logs');
   }
 
-  // Fetch set logs for each exercise
-  const exercisesWithSets = await Promise.all(
-    exerciseLogs.map(async (exerciseLog) => {
-      const { data: setLogs, error: setsError } = await supabase
-        .from('set_logs')
-        .select('*')
-        .eq('exercise_log_id', exerciseLog.id)
-        .order('set_number', { ascending: true });
+  // Fetch all set logs for this workout in a single query (avoids N+1 problem)
+  const { data: allSetLogs, error: setsError } = await supabase
+    .from('set_logs')
+    .select('*')
+    .eq('workout_log_id', workoutLog.id)
+    .order('exercise_log_id, set_number', { ascending: true });
 
-      if (setsError) {
-        console.error('Error fetching set logs:', setsError);
-        throw new Error('Failed to fetch set logs');
-      }
+  if (setsError) {
+    console.error('Error fetching set logs:', setsError);
+    throw new Error('Failed to fetch set logs');
+  }
 
-      return {
-        id: exerciseLog.id,
-        workoutLogId: exerciseLog.workout_log_id,
-        exerciseId: exerciseLog.exercise_id,
-        exerciseName: exerciseLog.exercise_name,
-        exerciseOrder: exerciseLog.exercise_order,
-        targetSets: exerciseLog.target_sets,
-        targetReps: exerciseLog.target_reps,
-        notes: exerciseLog.notes,
-        createdAt: exerciseLog.created_at,
-        updatedAt: exerciseLog.updated_at,
-        sets: setLogs.map((set) => ({
-          id: set.id,
-          exerciseLogId: set.exercise_log_id,
-          workoutLogId: set.workout_log_id,
-          setNumber: set.set_number,
-          weight: set.weight,
-          reps: set.reps,
-          createdAt: set.created_at,
-          updatedAt: set.updated_at,
-        })),
-      };
-    })
-  );
+  // Group sets by exercise_log_id for efficient lookup
+  const setsByExercise = new Map<string, typeof allSetLogs>();
+  allSetLogs.forEach((set) => {
+    if (!setsByExercise.has(set.exercise_log_id)) {
+      setsByExercise.set(set.exercise_log_id, []);
+    }
+    setsByExercise.get(set.exercise_log_id)!.push(set);
+  });
+
+  // Map exercises with their sets
+  const exercisesWithSets = exerciseLogs.map((exerciseLog) => {
+    const setLogs = setsByExercise.get(exerciseLog.id) || [];
+
+    return {
+      id: exerciseLog.id,
+      workoutLogId: exerciseLog.workout_log_id,
+      exerciseId: exerciseLog.exercise_id,
+      exerciseName: exerciseLog.exercise_name,
+      exerciseOrder: exerciseLog.exercise_order,
+      targetSets: exerciseLog.target_sets,
+      targetReps: exerciseLog.target_reps,
+      notes: exerciseLog.notes,
+      createdAt: exerciseLog.created_at,
+      updatedAt: exerciseLog.updated_at,
+      sets: setLogs.map((set) => ({
+        id: set.id,
+        exerciseLogId: set.exercise_log_id,
+        workoutLogId: set.workout_log_id,
+        setNumber: set.set_number,
+        weight: set.weight,
+        reps: set.reps,
+        createdAt: set.created_at,
+        updatedAt: set.updated_at,
+      })),
+    };
+  });
 
   return {
     id: workoutLog.id,
