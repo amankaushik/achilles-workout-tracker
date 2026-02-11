@@ -6,7 +6,7 @@
 
 **Critical: Run these migrations in order in your Supabase SQL Editor**
 
-https://supabase.com/dashboard/project/yfnrkjszmlyzvsvowytt/sql
+https://supabase.com/dashboard/project/YOUR_PROJECT_REF/sql
 
 #### Step 1: Create Core Schema
 ```sql
@@ -45,8 +45,8 @@ Go to Cloudflare Pages → Your Project → Settings → Environment Variables
 Add the following for both **Production** and **Preview** environments:
 
 ```
-VITE_SUPABASE_URL=https://yfnrkjszmlyzvsvowytt.supabase.co
-VITE_SUPABASE_ANON_KEY=sb_publishable_imTl-md9qRKI8W9oG1Zcyw_vwLHbWhQ
+VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 ```
 
 **Important:** These are build-time variables (VITE_ prefix), not runtime variables.

@@ -5,7 +5,7 @@ This guide will help you complete the Supabase integration for the Achilles Work
 ## Prerequisites
 
 - Supabase project credentials are already configured in `.env.local`
-- Project URL: `https://yfnrkjszmlyzvsvowytt.supabase.co`
+- Project URL: `https://YOUR_PROJECT_REF.supabase.co`
 
 ## Step 1: Install Dependencies
 
@@ -23,7 +23,7 @@ You need to execute the SQL migration files in your Supabase project.
 
 ### Option A: Using Supabase Dashboard (Recommended)
 
-1. Go to your Supabase project: https://supabase.com/dashboard/project/yfnrkjszmlyzvsvowytt
+1. Go to your Supabase project: https://supabase.com/dashboard/project/YOUR_PROJECT_REF
 2. Navigate to **SQL Editor** in the left sidebar
 3. Create a new query
 4. Copy and paste the contents of `supabase/migrations/001_initial_schema.sql`
@@ -36,7 +36,7 @@ If you have the Supabase CLI installed:
 
 ```bash
 # Link your project
-supabase link --project-ref yfnrkjszmlyzvsvowytt
+supabase link --project-ref YOUR_PROJECT_REF
 
 # Run migrations
 supabase db push
