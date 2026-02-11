@@ -1,6 +1,6 @@
 # Achilles Workout Tracker
 
-> ✨ **Built entirely through AI-assisted development** — This application was completely coded via prompting using [Claude](https://claude.ai) and [Antigravity](https://antigravity.com), showcasing the power of AI pair programming.
+> ✨ **Built entirely through AI-assisted development** — This application was completely coded via prompting using [Claude](https://claude.ai) and [Antigravity](https://antigravity.google), showcasing the power of AI pair programming.
 
 A modern, progressive workout tracking application designed to help you follow and monitor your strength training programs with precision.
 
