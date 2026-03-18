@@ -10,7 +10,7 @@ interface HeaderProps {
 }
 
 export default function Header({ onCreateSession, onSessionSwitchBlocked, hasInProgressWorkout, onMenuClick }: HeaderProps) {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isDemo, exitDemo } = useAuth();
 
   return (
     <header className="header">
@@ -23,15 +23,26 @@ export default function Header({ onCreateSession, onSessionSwitchBlocked, hasInP
       <div className="user-section">
         {user && (
           <>
-            <SessionSwitcher
-              onCreateNew={onCreateSession}
-              onSwitchBlocked={onSessionSwitchBlocked}
-              hasInProgressWorkout={hasInProgressWorkout}
-            />
-            <span className="user-email">{user.email}</span>
-            <button className="btn btn-ghost btn-sm logout-btn" onClick={signOut}>
-              Logout
-            </button>
+            {isDemo ? (
+              <>
+                <span className="demo-badge">Demo</span>
+                <button className="btn btn-ghost btn-sm logout-btn" onClick={exitDemo}>
+                  Exit Demo
+                </button>
+              </>
+            ) : (
+              <>
+                <SessionSwitcher
+                  onCreateNew={onCreateSession}
+                  onSwitchBlocked={onSessionSwitchBlocked}
+                  hasInProgressWorkout={hasInProgressWorkout}
+                />
+                <span className="user-email">{user.email}</span>
+                <button className="btn btn-ghost btn-sm logout-btn" onClick={signOut}>
+                  Logout
+                </button>
+              </>
+            )}
           </>
         )}
       </div>

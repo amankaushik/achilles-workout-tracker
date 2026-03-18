@@ -2,8 +2,11 @@ import { Auth as SupabaseAuth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '../lib/supabase';
 import { DISCLAIMER_TEXT } from '../constants/disclaimer';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Auth() {
+  const { enterDemo } = useAuth();
+
   return (
     <div className="auth-container">
       <div className="auth-card">
@@ -26,6 +29,14 @@ export default function Auth() {
           providers={[]}
           redirectTo={window.location.origin}
         />
+
+        <div className="auth-divider">
+          <span>or</span>
+        </div>
+
+        <button className="btn-demo" onClick={enterDemo}>
+          Try Demo
+        </button>
 
         <div className="auth-disclaimer">
           <p>

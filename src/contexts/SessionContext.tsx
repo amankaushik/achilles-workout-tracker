@@ -3,6 +3,29 @@ import { Session, Program } from '../types/database';
 import * as api from '../services/api';
 import { useAuth } from './AuthContext';
 import { WorkoutDataType } from '../types';
+import { WORKOUT_DATA } from '../data/workoutData';
+
+const DEMO_SESSION: Session = {
+  id: 'demo-session',
+  userId: 'demo',
+  programId: 'achilles',
+  name: 'Demo Session',
+  description: 'Try out the app without signing up',
+  isActive: true,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+};
+
+const DEMO_PROGRAM: Program = {
+  id: 'achilles',
+  name: 'Achilles Program',
+  description: 'A comprehensive workout program',
+  structure: WORKOUT_DATA as unknown as Record<string, any>,
+  createdBy: null,
+  isSystem: true,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+};
 
 interface SessionContextType {
   currentSession: Session | null;
@@ -20,7 +43,7 @@ interface SessionContextType {
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isDemo } = useAuth();
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
   const [currentProgram, setCurrentProgram] = useState<WorkoutDataType | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -34,6 +57,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Wait for auth to finish loading
     if (authLoading) {
+      return;
+    }
+
+    if (isDemo) {
+      setCurrentSession(DEMO_SESSION);
+      setCurrentProgram(WORKOUT_DATA);
+      setSessions([DEMO_SESSION]);
+      setPrograms([DEMO_PROGRAM]);
+      setIsLoading(false);
+      loadedUserIdRef.current = 'demo';
       return;
     }
 
@@ -59,7 +92,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         });
       }
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, isDemo]);
 
   const loadSessions = async () => {
     if (!user || loadingRef.current) return;
@@ -148,6 +181,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     description?: string,
     makeActive: boolean = false
   ): Promise<Session> => {
+    if (isDemo) return DEMO_SESSION;
     try {
       setError(null);
       const newSession = await api.createSession(programId, name, description, makeActive);
@@ -175,6 +209,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   };
 
   const switchSession = async (sessionId: string): Promise<void> => {
+    if (isDemo) return;
     try {
       setError(null);
       await api.setActiveSession(sessionId);
@@ -199,6 +234,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   };
 
   const renameSession = async (sessionId: string, newName: string): Promise<void> => {
+    if (isDemo) return;
     try {
       setError(null);
       const updatedSession = await api.updateSession(sessionId, { name: newName });
@@ -218,6 +254,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshSessions = async (): Promise<void> => {
+    if (isDemo) return;
     await loadSessions();
   };
 

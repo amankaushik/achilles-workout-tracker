@@ -3,6 +3,7 @@ import { WorkoutLog, WorkoutLogEntry } from '../types';
 import * as api from '../services/api';
 import { CreateWorkoutLogRequest } from '../types/database';
 import { useAuth } from '../contexts/AuthContext';
+import { DEMO_SEED_WORKOUTS } from '../data/demoSeedData';
 
 /**
  * Convert WorkoutLogEntry to CreateWorkoutLogRequest for API
@@ -32,7 +33,7 @@ function toApiFormat(data: WorkoutLogEntry): CreateWorkoutLogRequest {
 }
 
 export function useWorkoutStorage(currentSessionId: string | null) {
-  const { user } = useAuth();
+  const { user, isDemo } = useAuth();
   const STORAGE_KEY = currentSessionId ? `achilles_workout_log_${currentSessionId}` : 'achilles_workout_log';
 
   const [workoutLog, setWorkoutLog] = useState<WorkoutLog>(() => {
@@ -54,6 +55,16 @@ export function useWorkoutStorage(currentSessionId: string | null) {
   // Initial load from API (only if authenticated and session is set)
   useEffect(() => {
     async function loadFromApi() {
+      // Demo mode: use localStorage only, seed if empty
+      if (isDemo) {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved || saved === '{}') {
+          setWorkoutLog(DEMO_SEED_WORKOUTS);
+        }
+        setIsLoading(false);
+        return;
+      }
+
       // Don't attempt to load if user is not authenticated or no session
       if (!user || !currentSessionId) {
         setIsLoading(false);
@@ -124,8 +135,8 @@ export function useWorkoutStorage(currentSessionId: string | null) {
       [key]: data
     }));
 
-    // Don't attempt to save to API if user is not authenticated or no session
-    if (!user || !currentSessionId) {
+    // Don't attempt to save to API in demo mode or if not authenticated
+    if (isDemo || !user || !currentSessionId) {
       return;
     }
 
@@ -167,8 +178,8 @@ export function useWorkoutStorage(currentSessionId: string | null) {
       return newLog;
     });
 
-    // Don't attempt to delete from API if user is not authenticated or no session
-    if (!user || !currentSessionId) {
+    // Don't attempt to delete from API in demo mode or if not authenticated
+    if (isDemo || !user || !currentSessionId) {
       return;
     }
 
@@ -189,7 +200,7 @@ export function useWorkoutStorage(currentSessionId: string | null) {
   };
 
   const refreshFromApi = async () => {
-    if (!currentSessionId) return;
+    if (isDemo || !currentSessionId) return;
 
     try {
       const logs = await api.getWorkoutLogs(currentSessionId, 7);
