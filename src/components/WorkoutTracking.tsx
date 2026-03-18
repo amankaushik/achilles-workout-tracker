@@ -77,10 +77,35 @@ export default function WorkoutTracking({
   }, []);
 
   const scheduleSave = useCallback(() => {
-    isDirtyRef.current = false;
     clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
-      onSaveRef.current(buildExercisesRef.current(), false);
+      // Pre-fill: for each exercise, if a set has both weight and reps
+      // and the next set is empty, copy values to the next set
+      setExerciseData(prev => {
+        let anyChanged = false;
+        const newData = prev.map(exercise => {
+          const newSets = [...exercise.sets];
+          let changed = false;
+          for (let i = 0; i < newSets.length - 1; i++) {
+            const current = newSets[i];
+            const next = newSets[i + 1];
+            if (current.weight && current.reps && !next.weight && !next.reps) {
+              newSets[i + 1] = { weight: current.weight, reps: current.reps, completed: false };
+              changed = true;
+              anyChanged = true;
+              break; // Only fill one set at a time per exercise
+            }
+          }
+          return changed ? { ...exercise, sets: newSets } : exercise;
+        });
+        return anyChanged ? newData : prev;
+      });
+
+      // Save after React processes any pre-fill state update
+      setTimeout(() => {
+        isDirtyRef.current = false;
+        onSaveRef.current(buildExercisesRef.current(), false);
+      }, 0);
     }, 500);
   }, []);
 
@@ -94,21 +119,9 @@ export default function WorkoutTracking({
       // Derive completed from having both weight and reps
       updatedSet.completed = !!(updatedSet.weight && updatedSet.reps);
 
-      let sets = newData[exerciseIdx].sets.map((set, idx) =>
+      const sets = newData[exerciseIdx].sets.map((set, idx) =>
         idx === setIdx ? updatedSet : set
       );
-
-      // Pre-fill remaining empty sets when first set becomes complete
-      const wasComplete = !!(prevSet.weight && prevSet.reps);
-      if (setIdx === 0 && !wasComplete && updatedSet.completed) {
-        sets = sets.map((set, idx) => {
-          if (idx === 0) return set;
-          if (!set.weight && !set.reps) {
-            return { weight: updatedSet.weight, reps: updatedSet.reps, completed: false };
-          }
-          return set;
-        });
-      }
 
       newData[exerciseIdx] = { ...newData[exerciseIdx], sets };
       return newData;
