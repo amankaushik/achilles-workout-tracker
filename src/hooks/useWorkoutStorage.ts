@@ -87,6 +87,7 @@ export function useWorkoutStorage(currentSessionId: string | null) {
                 sets: exercise.sets.map(set => ({
                   weight: set.weight || '',
                   reps: set.reps || '',
+                  completed: !!(set.weight && set.reps),
                 })),
                 notes: exercise.notes || '',
               })),
@@ -215,6 +216,7 @@ export function useWorkoutStorage(currentSessionId: string | null) {
               sets: exercise.sets.map(set => ({
                 weight: set.weight || '',
                 reps: set.reps || '',
+                completed: !!(set.weight && set.reps),
               })),
               notes: exercise.notes || '',
             })),

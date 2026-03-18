@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronLeft, Timer, X } from 'lucide-react';
 import { WORKOUT_DATA } from '../data/workoutData';
 import { toRoman } from '../utils/helpers';
@@ -29,6 +29,8 @@ export default function WorkoutTracking({
 }: WorkoutTrackingProps) {
   const workout = WORKOUT_DATA[phase].workouts[workoutNum];
   const [isStopwatchOpen, setIsStopwatchOpen] = useState(false);
+  const isDirtyRef = useRef(false);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const [exerciseData, setExerciseData] = useState<ExerciseFormData[]>(() => {
     return workout.exercises.map((exercise, idx) => {
@@ -44,20 +46,79 @@ export default function WorkoutTracking({
     });
   });
 
+  const buildExercises = useCallback((): ExerciseLog[] => {
+    return workout.exercises.map((exercise, idx) => ({
+      name: exercise.name,
+      targetSets: exercise.sets,
+      targetReps: exercise.reps,
+      sets: exerciseData[idx].sets,
+      notes: exerciseData[idx].notes
+    }));
+  }, [workout.exercises, exerciseData]);
+
+  // Keep refs in sync for use in timers and cleanup
+  const buildExercisesRef = useRef(buildExercises);
+  const onSaveRef = useRef(onSave);
+  const existingDataRef = useRef(existingData);
+  useEffect(() => {
+    buildExercisesRef.current = buildExercises;
+    onSaveRef.current = onSave;
+    existingDataRef.current = existingData;
+  });
+
+  // Save unsaved changes on unmount (e.g. navigating away)
+  useEffect(() => {
+    return () => {
+      clearTimeout(saveTimerRef.current);
+      if (isDirtyRef.current && !existingDataRef.current?.completed) {
+        onSaveRef.current(buildExercisesRef.current(), false);
+      }
+    };
+  }, []);
+
+  const scheduleSave = useCallback(() => {
+    isDirtyRef.current = false;
+    clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      onSaveRef.current(buildExercisesRef.current(), false);
+    }, 500);
+  }, []);
+
   const handleSetChange = (exerciseIdx: number, setIdx: number, field: keyof SetData, value: string) => {
+    isDirtyRef.current = true;
     setExerciseData(prev => {
       const newData = [...prev];
-      newData[exerciseIdx] = {
-        ...newData[exerciseIdx],
-        sets: newData[exerciseIdx].sets.map((set, idx) =>
-          idx === setIdx ? { ...set, [field]: value } : set
-        )
-      };
+      const prevSet = newData[exerciseIdx].sets[setIdx];
+      const updatedSet = { ...prevSet, [field]: value };
+
+      // Derive completed from having both weight and reps
+      updatedSet.completed = !!(updatedSet.weight && updatedSet.reps);
+
+      let sets = newData[exerciseIdx].sets.map((set, idx) =>
+        idx === setIdx ? updatedSet : set
+      );
+
+      // Pre-fill remaining empty sets when first set becomes complete
+      const wasComplete = !!(prevSet.weight && prevSet.reps);
+      if (setIdx === 0 && !wasComplete && updatedSet.completed) {
+        sets = sets.map((set, idx) => {
+          if (idx === 0) return set;
+          if (!set.weight && !set.reps) {
+            return { weight: updatedSet.weight, reps: updatedSet.reps, completed: false };
+          }
+          return set;
+        });
+      }
+
+      newData[exerciseIdx] = { ...newData[exerciseIdx], sets };
       return newData;
     });
+
+    scheduleSave();
   };
 
   const handleNotesChange = (exerciseIdx: number, value: string) => {
+    isDirtyRef.current = true;
     setExerciseData(prev => {
       const newData = [...prev];
       newData[exerciseIdx] = {
@@ -66,74 +127,13 @@ export default function WorkoutTracking({
       };
       return newData;
     });
-  };
 
-  const handleSetComplete = (exerciseIdx: number, setIdx: number, isChecked: boolean) => {
-    let shouldSave = false;
-
-    setExerciseData(prev => {
-      const newData = [...prev];
-      const currentSet = newData[exerciseIdx].sets[setIdx];
-
-      // If unchecking, just update the completed status
-      if (!isChecked) {
-        newData[exerciseIdx] = {
-          ...newData[exerciseIdx],
-          sets: newData[exerciseIdx].sets.map((set, idx) =>
-            idx === setIdx ? { ...set, completed: false } : set
-          )
-        };
-        shouldSave = true;
-      } else {
-        // If checking the first set (setIdx === 0), pre-fill remaining sets
-        if (setIdx === 0 && currentSet.weight && currentSet.reps) {
-          newData[exerciseIdx] = {
-            ...newData[exerciseIdx],
-            sets: newData[exerciseIdx].sets.map((set, idx) => {
-              if (idx === 0) {
-                return { ...set, completed: true };
-              } else if (!set.completed) {
-                // Pre-fill only if not already completed
-                return {
-                  weight: currentSet.weight,
-                  reps: currentSet.reps,
-                  completed: false
-                };
-              }
-              return set;
-            })
-          };
-        } else {
-          // Just mark the set as complete
-          newData[exerciseIdx] = {
-            ...newData[exerciseIdx],
-            sets: newData[exerciseIdx].sets.map((set, idx) =>
-              idx === setIdx ? { ...set, completed: true } : set
-            )
-          };
-        }
-        shouldSave = true;
-      }
-
-      // Save after state is updated
-      if (shouldSave) {
-        setTimeout(() => {
-          const exercises: ExerciseLog[] = workout.exercises.map((exercise, idx) => ({
-            name: exercise.name,
-            targetSets: exercise.sets,
-            targetReps: exercise.reps,
-            sets: newData[idx].sets,
-            notes: newData[idx].notes
-          }));
-          onSave(exercises, false);
-        }, 0);
-      }
-
-      return newData;
-    });
+    scheduleSave();
   };
 
   const handleMarkComplete = () => {
+    isDirtyRef.current = false;
+    clearTimeout(saveTimerRef.current);
     const exercises: ExerciseLog[] = workout.exercises.map((exercise, idx) => ({
       name: exercise.name,
       targetSets: exercise.sets,
@@ -168,7 +168,6 @@ export default function WorkoutTracking({
                 <span></span>
                 <span>Weight</span>
                 <span>Reps</span>
-                <span>✓</span>
               </div>
 
               {exerciseData[exerciseIdx].sets.map((set, setIdx) => (
@@ -190,13 +189,6 @@ export default function WorkoutTracking({
                     value={set.reps}
                     onChange={(e) => handleSetChange(exerciseIdx, setIdx, 'reps', e.target.value)}
                     inputMode="numeric"
-                    disabled={existingData?.completed}
-                  />
-                  <input
-                    type="checkbox"
-                    className="set-checkbox"
-                    checked={set.completed || false}
-                    onChange={(e) => handleSetComplete(exerciseIdx, setIdx, e.target.checked)}
                     disabled={existingData?.completed}
                   />
                 </div>
@@ -233,7 +225,7 @@ export default function WorkoutTracking({
           color: 'var(--success)',
           fontWeight: 600
         }}>
-          ✓ Workout Completed
+          Workout Completed
         </div>
       )}
 
